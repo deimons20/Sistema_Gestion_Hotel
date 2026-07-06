@@ -15,6 +15,17 @@ public class habitaciones extends javax.swing.JFrame {
      */
     public habitaciones() {
         initComponents();
+        
+        jPanel1.setBackground(new java.awt.Color(0, 0, 0, 150));
+        
+        int ancho = 650;
+        int alto = 440;
+        
+        javax.swing.ImageIcon iconoOriginal = (javax.swing.ImageIcon) jLabel1.getIcon();
+        java.awt.Image imagenEscalada = iconoOriginal.getImage().getScaledInstance(ancho, alto, java.awt.Image.SCALE_SMOOTH);
+        jLabel1.setIcon(new javax.swing.ImageIcon(imagenEscalada));
+        
+        jLabel1.setText(""); 
     }
 
     /**
@@ -26,18 +37,16 @@ public class habitaciones extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-        );
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 20, 580, 400));
+
+        jLabel1.setIcon(new javax.swing.ImageIcon("C:\\Users\\rojas\\Downloads\\ejemplo1.jpg")); // NOI18N
+        jLabel1.setText("jLabel1");
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 650, 440));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -78,5 +87,7 @@ public class habitaciones extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 }
