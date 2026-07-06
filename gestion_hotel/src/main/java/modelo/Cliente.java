@@ -1,13 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package modelo;
 
-/**
- *
- * @author Ymari
- */
-public class Cliente {
-    
+public class Cliente extends Persona {
+    private int idCliente;
+
+    public Cliente() {
+        super();
+    }
+
+    public Cliente(int idCliente, String dni, String nombres, String apellidos, String telefono) {
+        super(dni, nombres, apellidos, telefono);
+        this.idCliente = idCliente;
+    }
+
+    // Getters y Setters
+    public int getIdCliente() { return idCliente; }
+    public void setIdCliente(int idCliente) { this.idCliente = idCliente; }
 }
