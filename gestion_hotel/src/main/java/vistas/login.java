@@ -128,6 +128,7 @@ public class login extends javax.swing.JFrame {
         getContentPane().add(mapocho, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 550, 360));
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/descarga.png"))); // NOI18N
         jLabel1.setIconTextGap(0);
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 800, 490));
 
