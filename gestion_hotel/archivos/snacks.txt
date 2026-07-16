@@ -1,0 +1,5 @@
+S01;Agua Mineral;50;2.5
+S02;Gaseosa Cola;40;3.5
+S03;Papas Fritas;30;4.0
+S04;Galletas;25;2.0
+S05;Chocolate;20;5.0
