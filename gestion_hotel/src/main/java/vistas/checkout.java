@@ -10,6 +10,15 @@ import javax.swing.table.JTableHeader;
 import persistencia.*;
 import modelo.*;
 import java.util.ArrayList;
+import java.io.File;
+import java.io.FileOutputStream;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 
 public class checkout extends JFrame {
 
@@ -25,7 +34,7 @@ public class checkout extends JFrame {
     private JButton btnBuscar, btnProcesarSalida, btnImprimir;
 
     public checkout() {
-        setTitle("Hotel Paraíso - Procesar Salida (Check-Out)");
+        setTitle("Hotel Mapocho - Procesar Salida (Check-Out)");
         setSize(1100, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -106,6 +115,7 @@ public class checkout extends JFrame {
         // Buscador
         JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
         searchPanel.setOpaque(false);
+        searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         searchPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(59, 130, 246)),
                 new EmptyBorder(0, 0, 5, 0)
@@ -126,6 +136,7 @@ public class checkout extends JFrame {
         // Campos de información (Solo lectura)
         JPanel formPanel = new JPanel(new GridLayout(3, 1, 0, 25));
         formPanel.setOpaque(false);
+        formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
         
         txtCliente = crearTextFieldMaterial("Nombre del Huésped");
         txtCliente.setEditable(false);
@@ -186,18 +197,30 @@ public class checkout extends JFrame {
                 modeloCuenta.setRowCount(0);
                 double total = 0.0;
                 
-                // Cobrar la habitación (Asumiremos 1 noche para simplificar si no hay logica de fechas complejas)
-                modeloCuenta.addRow(new Object[]{"Estadía - " + h.getTipo(), "1", String.format("%.2f", h.getPrecio())});
-                total += h.getPrecio();
-                
                 // Buscar Consumos
                 ConsumoArchivo consArch = new ConsumoArchivo();
                 SnackArchivo sa = new SnackArchivo();
+                boolean hasEstadia = false;
+                
                 for (Consumo cons : consArch.listarPorHabitacion(numHabitacion)) {
-                    modelo.Snack s = sa.buscar(cons.getCodigoSnack());
-                    String nombreSnack = (s != null) ? s.getNombre() : "Consumo " + cons.getCodigoSnack();
-                    modeloCuenta.addRow(new Object[]{nombreSnack, cons.getCantidad(), String.format("%.2f", cons.getSubtotal())});
+                    if (cons.getCodigoSnack().equals("ESTADIA")) {
+                        modeloCuenta.addRow(new Object[]{"Estadía - " + h.getTipo(), cons.getCantidad() + " días", String.format("%.2f", cons.getSubtotal())});
+                        hasEstadia = true;
+                    } else if (cons.getCodigoSnack().equals("MEDIODIA")) {
+                        modeloCuenta.addRow(new Object[]{"Estadía (Medio Día) - " + h.getTipo(), "1", String.format("%.2f", cons.getSubtotal())});
+                        hasEstadia = true;
+                    } else {
+                        modelo.Snack s = sa.buscar(cons.getCodigoSnack());
+                        String nombreSnack = (s != null) ? s.getNombre() : "Consumo " + cons.getCodigoSnack();
+                        modeloCuenta.addRow(new Object[]{nombreSnack, cons.getCantidad(), String.format("%.2f", cons.getSubtotal())});
+                    }
                     total += cons.getSubtotal();
+                }
+                
+                // Cobrar la habitación si no se registró en Check-In (por retrocompatibilidad o error)
+                if (!hasEstadia) {
+                    modeloCuenta.addRow(new Object[]{"Estadía - " + h.getTipo(), "1", String.format("%.2f", h.getPrecio())});
+                    total += h.getPrecio();
                 }
                 
                 lblTotal.setText(String.format("TOTAL A PAGAR: S/ %.2f", total));
@@ -266,6 +289,75 @@ public class checkout extends JFrame {
         panelBotones.setOpaque(false);
         
         btnImprimir = crearBoton("Imprimir Recibo", new Color(100, 116, 139)); // Gris
+        btnImprimir.addActionListener(e -> {
+            String hab = txtBusquedaHabitacion.getText().trim();
+            if(hab.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Primero busque una habitación.");
+                return;
+            }
+            if(modeloCuenta.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this, "No hay estado de cuenta generado.");
+                return;
+            }
+            
+            try {
+                String folderPath = "C:\\Users\\rojas\\OneDrive\\Documentos\\ReporteHotel";
+                File folder = new File(folderPath);
+                if(!folder.exists()) folder.mkdirs();
+                
+                String path = folderPath + "\\Recibo_Hab_" + hab + ".pdf";
+                Document document = new Document();
+                PdfWriter.getInstance(document, new FileOutputStream(path));
+                document.open();
+                
+                // Titulo
+                com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+                Paragraph titulo = new Paragraph("Hotel Paraiso - Recibo de Check-Out\n\n", titleFont);
+                titulo.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                document.add(titulo);
+                
+                // Datos
+                com.itextpdf.text.Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+                document.add(new Paragraph("Habitacion: " + hab, textFont));
+                document.add(new Paragraph("Huesped: " + txtCliente.getText(), textFont));
+                document.add(new Paragraph("Fecha Ingreso: " + txtFechaIngreso.getText(), textFont));
+                document.add(new Paragraph("Fecha Salida: " + txtFechaSalida.getText() + "\n\n", textFont));
+                
+                // Tabla
+                PdfPTable table = new PdfPTable(3);
+                table.setWidthPercentage(100);
+                
+                // Cabeceras
+                String[] headers = {"Descripcion", "Cant.", "Subtotal (S/)"};
+                for(String h : headers) {
+                    PdfPCell c = new PdfPCell(new Phrase(h, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+                    c.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                    c.setBackgroundColor(com.itextpdf.text.BaseColor.LIGHT_GRAY);
+                    table.addCell(c);
+                }
+                
+                // Filas
+                for(int i=0; i<modeloCuenta.getRowCount(); i++) {
+                    table.addCell(modeloCuenta.getValueAt(i, 0).toString());
+                    table.addCell(modeloCuenta.getValueAt(i, 1).toString());
+                    table.addCell(modeloCuenta.getValueAt(i, 2).toString());
+                }
+                document.add(table);
+                
+                // Total
+                com.itextpdf.text.Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, com.itextpdf.text.BaseColor.RED);
+                Paragraph total = new Paragraph("\n" + lblTotal.getText(), totalFont);
+                total.setAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
+                document.add(total);
+                
+                document.close();
+                JOptionPane.showMessageDialog(this, "Recibo generado y guardado en:\n" + path);
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al generar PDF: " + ex.getMessage());
+            }
+        });
+        
         btnProcesarSalida = crearBoton("Procesar Salida", new Color(16, 185, 129)); // Verde
         
         btnProcesarSalida.addActionListener(e -> {

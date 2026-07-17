@@ -16,6 +16,9 @@ public class checkin extends JFrame {
     private JTextField txtHabitacion;
     private JTextField txtFechaLlegada;
     private JButton btnBuscar, btnConfirmarCheckIn;
+    private JComboBox<String> cbDuracion;
+    private JTextField txtTotal;
+    private double precioBaseHabitacion = 0.0;
 
     private String numHabInicial = "";
 
@@ -25,8 +28,8 @@ public class checkin extends JFrame {
 
     public checkin(String numeroHabitacionInicial) {
         this.numHabInicial = numeroHabitacionInicial;
-        setTitle("Hotel Paraíso - Realizar Check-In");
-        setSize(900, 600);
+        setTitle("Hotel Mapocho - Realizar Check-In");
+        setSize(900, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -144,6 +147,7 @@ public class checkin extends JFrame {
                 }
                 txtHabitacion.setText(String.valueOf(reserva.getNumeroHabitacion()));
                 txtHabitacion.setEditable(false);
+                actualizarPrecioBase(String.valueOf(reserva.getNumeroHabitacion()));
             } else {
                 // Intentar buscar como DNI de cliente directo
                 Cliente c = ca.buscar(input);
@@ -154,6 +158,7 @@ public class checkin extends JFrame {
                         JOptionPane.showMessageDialog(this, "Cliente encontrado (Sin reserva). Escriba el número de habitación a asignar.");
                     } else {
                         JOptionPane.showMessageDialog(this, "Cliente encontrado (Sin reserva). La habitación seleccionada se mantendrá.");
+                        actualizarPrecioBase(txtHabitacion.getText().trim());
                     }
                 } else {
                     JOptionPane.showMessageDialog(this, "No se encontró cliente ni reserva con ese dato. Registre al cliente primero en 'Clientes'.");
@@ -187,7 +192,7 @@ public class checkin extends JFrame {
         lblTituloCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Campos de lectura
-        JPanel formPanel = new JPanel(new GridLayout(3, 1, 0, 25));
+        JPanel formPanel = new JPanel(new GridLayout(5, 1, 0, 15));
         formPanel.setOpaque(false);
         
         txtCliente = crearTextFieldMaterial("Nombre del Huésped (Autocompletado)");
@@ -198,6 +203,11 @@ public class checkin extends JFrame {
             txtHabitacion.setText(numHabInicial);
         }
         txtHabitacion.setEditable(false);
+        txtHabitacion.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                actualizarPrecioBase(txtHabitacion.getText().trim());
+            }
+        });
         
         txtFechaLlegada = crearTextFieldMaterial("Fecha y Hora de Ingreso actual");
         txtFechaLlegada.setEditable(false);
@@ -205,9 +215,58 @@ public class checkin extends JFrame {
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy - hh:mm a");
         txtFechaLlegada.setText(java.time.LocalDateTime.now().format(dtf)); 
         
+        String[] opciones = {"Seleccione duración...", "Medio Día", "1 Día", "2 Días", "3 Días", "4 Días", "5 Días", "6 Días", "7 Días"};
+        cbDuracion = new JComboBox<>(opciones);
+        cbDuracion.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        cbDuracion.setBackground(Color.WHITE);
+        cbDuracion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cbDuracion.addActionListener(e -> calcularTotal());
+        
+        txtTotal = crearTextFieldMaterial("Total a Pagar (S/)");
+        txtTotal.setEditable(false);
+        txtTotal.setForeground(new Color(239, 68, 68));
+        txtTotal.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        
         formPanel.add(txtCliente);
         formPanel.add(txtHabitacion);
         formPanel.add(txtFechaLlegada);
+        formPanel.add(cbDuracion);
+        formPanel.add(txtTotal);
+        
+        if (numHabInicial != null && !numHabInicial.isEmpty()) {
+            actualizarPrecioBase(numHabInicial);
+            // Autocompletar datos si hay reserva
+            ReservaArchivo ra = new ReservaArchivo();
+            for (Reserva r : ra.listar()) {
+                if (String.valueOf(r.getNumeroHabitacion()).equals(numHabInicial)) {
+                    ClienteArchivo ca = new ClienteArchivo();
+                    Cliente c = ca.buscar(String.valueOf(r.getIdCliente()));
+                    if (c != null) {
+                        txtCliente.setText(c.getNombres() + " " + c.getApellidos());
+                    } else {
+                        txtCliente.setText("Cliente ID: " + r.getIdCliente());
+                    }
+                    txtBuscador.setText(r.getCodigoReserva()); // Setear el buscador para que se use al guardar
+                    
+                    try {
+                        String fOut = r.getFechaSalida();
+                        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                        java.time.LocalDate dIn = java.time.LocalDate.now(); // Usar el dia actual en lugar del fIn de la reserva
+                        java.time.LocalDate dOut = java.time.LocalDate.parse(fOut, formatter);
+                        long days = java.time.temporal.ChronoUnit.DAYS.between(dIn, dOut);
+                        if (days >= 0 && days <= 7) {
+                            cbDuracion.setSelectedIndex(days == 0 ? 1 : (int)days + 1); // Si es el mismo dia, cobra medio dia, si no, los dias enteros
+                        } else if (days > 7) {
+                            cbDuracion.setSelectedIndex(8);
+                        }
+                    } catch (Exception ex) {
+                        // Ignorar
+                    }
+                    
+                    break;
+                }
+            }
+        }
 
         btnConfirmarCheckIn = new JButton("Confirmar Ingreso (Ocupar Habitación)");
         btnConfirmarCheckIn.setFont(new Font("Segoe UI", Font.BOLD, 15));
@@ -249,6 +308,18 @@ public class checkin extends JFrame {
                     ReservaArchivo ra = new ReservaArchivo();
                     Reserva r = ra.buscar(busqueda);
                     
+                    int idx = cbDuracion.getSelectedIndex();
+                    String fechaSalida = "Por definir";
+                    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                    java.time.format.DateTimeFormatter dtf2 = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy - hh:mm a");
+                    if (idx > 0) {
+                        if (idx == 1) {
+                            fechaSalida = now.plusHours(12).format(dtf2);
+                        } else {
+                            fechaSalida = now.plusDays(idx - 1).format(dtf2);
+                        }
+                    }
+                    
                     if (r == null) {
                         // Fue un check-in directo (DNI)
                         r = new Reserva();
@@ -256,8 +327,29 @@ public class checkin extends JFrame {
                         r.setIdCliente(Integer.parseInt(busqueda)); 
                         r.setNumeroHabitacion(numHabitacion);
                         r.setFechaIngreso(txtFechaLlegada.getText());
-                        r.setFechaSalida("Por definir");
+                        r.setFechaSalida(fechaSalida);
                         ra.registrar(r);
+                    } else {
+                        r.setFechaIngreso(txtFechaLlegada.getText());
+                        r.setFechaSalida(fechaSalida);
+                        ra.actualizar(r);
+                    }
+                    
+                    if (idx > 0 && precioBaseHabitacion > 0) {
+                        persistencia.ConsumoArchivo ca = new persistencia.ConsumoArchivo();
+                        modelo.Consumo c = new modelo.Consumo();
+                        c.setIdConsumo((int)(Math.random() * 900000) + 100000);
+                        c.setNumeroHabitacion(numHabitacion);
+                        if (idx == 1) {
+                            c.setCodigoSnack("MEDIODIA");
+                            c.setCantidad(1);
+                            c.setSubtotal(precioBaseHabitacion / 2.0);
+                        } else {
+                            c.setCodigoSnack("ESTADIA");
+                            c.setCantidad(idx - 1);
+                            c.setSubtotal(precioBaseHabitacion * (idx - 1));
+                        }
+                        ca.registrar(c);
                     }
 
                     JOptionPane.showMessageDialog(this, "Check-In realizado con éxito. Habitación OCUPADA.");
@@ -273,13 +365,43 @@ public class checkin extends JFrame {
         });
 
         cardPanel.add(lblTituloCard);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 30)));
         cardPanel.add(formPanel);
         cardPanel.add(Box.createVerticalGlue());
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         cardPanel.add(btnConfirmarCheckIn);
 
         return cardPanel;
+    }
+
+    private void actualizarPrecioBase(String numHab) {
+        if (!numHab.isEmpty()) {
+            persistencia.HabitacionArchivo ha = new persistencia.HabitacionArchivo();
+            modelo.Habitacion h = ha.buscar(numHab);
+            if (h != null) {
+                precioBaseHabitacion = h.getPrecio();
+                calcularTotal();
+            } else {
+                precioBaseHabitacion = 0.0;
+                txtTotal.setText("Total a Pagar (S/): 0.00");
+            }
+        }
+    }
+
+    private void calcularTotal() {
+        if (cbDuracion == null || txtTotal == null) return;
+        int idx = cbDuracion.getSelectedIndex();
+        if (idx > 0 && precioBaseHabitacion > 0) {
+            double total = 0;
+            if (idx == 1) {
+                total = precioBaseHabitacion / 2.0;
+            } else {
+                total = precioBaseHabitacion * (idx - 1);
+            }
+            txtTotal.setText(String.format("Total a Pagar (S/): %.2f", total));
+        } else {
+            txtTotal.setText("Total a Pagar (S/): 0.00");
+        }
     }
 
     private JTextField crearTextFieldMaterial(String placeholderTexto) {

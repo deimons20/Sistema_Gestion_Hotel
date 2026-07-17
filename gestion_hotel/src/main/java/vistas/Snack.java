@@ -25,7 +25,7 @@ public class Snack extends JFrame {
     private JButton btnAgregar, btnQuitar, btnRegistrar;
 
     public Snack() {
-        setTitle("Hotel Paraíso - Punto de Venta (Snack Bar)");
+        setTitle("Hotel Mapocho - Punto de Venta (Snack Bar)");
         setSize(1100, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -106,7 +106,7 @@ public class Snack extends JFrame {
         lblTituloCard.setForeground(new Color(30, 41, 59));
 
         // Tabla del Menú
-        String[] columnas = {"Cod.", "Producto", "Precio (S/)"};
+        String[] columnas = {"Cod.", "Producto", "Stock", "Precio (S/)"};
         modeloMenu = new DefaultTableModel(columnas, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -115,7 +115,161 @@ public class Snack extends JFrame {
         scrollMenu.getViewport().setBackground(Color.WHITE);
         scrollMenu.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        // Cargar datos reales
+        cargarDatosMenu(); // Llenar la tabla
+
+        btnAgregar = crearBoton("Agregar al Carrito", new Color(59, 130, 246)); // Azul
+        btnAgregar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        btnAgregar.addActionListener(e -> {
+            int fila = tablaMenu.getSelectedRow();
+            if (fila >= 0) {
+                String stockStr = modeloMenu.getValueAt(fila, 2).toString();
+                if (stockStr.equals("AGOTADO")) {
+                    JOptionPane.showMessageDialog(this, "Este producto está agotado.");
+                    return;
+                }
+                
+                String cod = modeloMenu.getValueAt(fila, 0).toString();
+                String prod = modeloMenu.getValueAt(fila, 1).toString();
+                double precioUnitario = Double.parseDouble(modeloMenu.getValueAt(fila, 3).toString().replace(",", "."));
+                
+                boolean existe = false;
+                for (int i = 0; i < modeloCarrito.getRowCount(); i++) {
+                    if (modeloCarrito.getValueAt(i, 0).toString().equals(cod)) {
+                        int cantActual = Integer.parseInt(modeloCarrito.getValueAt(i, 2).toString());
+                        int stockDisponible = Integer.parseInt(stockStr);
+                        if (cantActual >= stockDisponible) {
+                            JOptionPane.showMessageDialog(this, "No hay suficiente stock para añadir más.");
+                            return;
+                        }
+                        cantActual++;
+                        modeloCarrito.setValueAt(String.valueOf(cantActual), i, 2);
+                        double nuevoSubtotal = cantActual * precioUnitario;
+                        modeloCarrito.setValueAt(String.format("%.2f", nuevoSubtotal).replace(",", "."), i, 3);
+                        existe = true;
+                        break;
+                    }
+                }
+                
+                if (!existe) {
+                    modeloCarrito.addRow(new Object[]{cod, prod, "1", String.format("%.2f", precioUnitario).replace(",", ".")});
+                }
+                
+                calcularTotal();
+            } else {
+                JOptionPane.showMessageDialog(this, "Seleccione un producto del menú.");
+            }
+        });
+
+        // --- Botones de Administración ---
+        JPanel panelAdmin = new JPanel(new GridLayout(1, 3, 10, 0));
+        panelAdmin.setOpaque(false);
+        
+        JButton btnNuevo = crearBoton("+ Nuevo", new Color(16, 185, 129)); 
+        JButton btnEliminar = crearBoton("Eliminar", new Color(239, 68, 68)); 
+        JButton btnEditar = crearBoton("Editar", new Color(245, 158, 11)); 
+        
+        btnNuevo.addActionListener(e -> {
+            String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo snack:");
+            if (nombre != null && !nombre.trim().isEmpty()) {
+                String precioStr = JOptionPane.showInputDialog(this, "Precio (Ej: 2.50):");
+                if (precioStr != null && !precioStr.trim().isEmpty()) {
+                    String stockStr = JOptionPane.showInputDialog(this, "Stock Inicial:");
+                    if (stockStr != null && !stockStr.trim().isEmpty()) {
+                        try {
+                            double precio = Double.parseDouble(precioStr.replace(",", "."));
+                            int stock = Integer.parseInt(stockStr);
+                            SnackArchivo sa = new SnackArchivo();
+                            ArrayList<modelo.Snack> lista = sa.listar();
+                            int nextId = lista.size() + 1;
+                            String cod = "S" + String.format("%02d", nextId);
+                            sa.registrar(new modelo.Snack(cod, nombre.trim(), stock, precio));
+                            cargarDatosMenu();
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(this, "Valores numéricos inválidos.");
+                        }
+                    }
+                }
+            }
+        });
+        
+        btnEliminar.addActionListener(e -> {
+            int fila = tablaMenu.getSelectedRow();
+            if (fila >= 0) {
+                String cod = modeloMenu.getValueAt(fila, 0).toString();
+                if (JOptionPane.showConfirmDialog(this, "¿Eliminar producto " + cod + "?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                    SnackArchivo sa = new SnackArchivo();
+                    sa.eliminar(cod);
+                    
+                    // Re-indexar los codigos restantes para que mantengan el orden S01, S02...
+                    ArrayList<modelo.Snack> listaRestante = sa.listar();
+                    try (java.io.BufferedWriter bw = new java.io.BufferedWriter(new java.io.FileWriter("archivos/snacks.txt"))) {
+                        for (int i = 0; i < listaRestante.size(); i++) {
+                            modelo.Snack s = listaRestante.get(i);
+                            String nuevoCod = "S" + String.format("%02d", i + 1);
+                            bw.write(nuevoCod + ";" + s.getNombre() + ";" + s.getStock() + ";" + s.getPrecio());
+                            bw.newLine();
+                        }
+                    } catch (Exception ex) { }
+                    
+                    cargarDatosMenu();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Seleccione un producto para eliminar.");
+            }
+        });
+        
+        btnEditar.addActionListener(e -> {
+            int fila = tablaMenu.getSelectedRow();
+            if (fila >= 0) {
+                String cod = modeloMenu.getValueAt(fila, 0).toString();
+                SnackArchivo sa = new SnackArchivo();
+                modelo.Snack s = sa.buscar(cod);
+                if (s != null) {
+                    String nuevoNombre = JOptionPane.showInputDialog(this, "Nombre del producto:", s.getNombre());
+                    if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
+                        String nuevoPrecio = JOptionPane.showInputDialog(this, "Precio:", s.getPrecio());
+                        if (nuevoPrecio != null && !nuevoPrecio.trim().isEmpty()) {
+                            String nuevoStock = JOptionPane.showInputDialog(this, "Stock actual:", s.getStock());
+                            if (nuevoStock != null && !nuevoStock.trim().isEmpty()) {
+                                try {
+                                    double precio = Double.parseDouble(nuevoPrecio.replace(",", "."));
+                                    int stock = Integer.parseInt(nuevoStock);
+                                    s.setNombre(nuevoNombre.trim());
+                                    s.setPrecio(precio);
+                                    s.setStock(stock);
+                                    sa.actualizar(s);
+                                    cargarDatosMenu();
+                                    JOptionPane.showMessageDialog(this, "Producto actualizado correctamente.");
+                                } catch (Exception ex) {
+                                    JOptionPane.showMessageDialog(this, "Valores numéricos inválidos.");
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Seleccione un producto para editar.");
+            }
+        });
+        
+        panelAdmin.add(btnNuevo);
+        panelAdmin.add(btnEditar);
+        panelAdmin.add(btnEliminar);
+
+        cardPanel.add(lblTituloCard);
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        cardPanel.add(scrollMenu);
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cardPanel.add(panelAdmin);
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cardPanel.add(btnAgregar);
+
+        return cardPanel;
+    }
+    
+    private void cargarDatosMenu() {
+        modeloMenu.setRowCount(0);
         SnackArchivo sa = new SnackArchivo();
         ArrayList<modelo.Snack> listaSnacks = sa.listar();
         if (listaSnacks.isEmpty()) {
@@ -127,34 +281,9 @@ public class Snack extends JFrame {
             listaSnacks = sa.listar();
         }
         for (modelo.Snack s : listaSnacks) {
-            modeloMenu.addRow(new Object[]{s.getCodigo(), s.getNombre(), String.format("%.2f", s.getPrecio())});
+            String stockDisplay = s.getStock() <= 0 ? "AGOTADO" : String.valueOf(s.getStock());
+            modeloMenu.addRow(new Object[]{s.getCodigo(), s.getNombre(), stockDisplay, String.format("%.2f", s.getPrecio())});
         }
-
-        btnAgregar = crearBoton("Agregar al Carrito ➔", new Color(59, 130, 246)); // Azul
-        btnAgregar.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Simular funcionalidad de agregar
-        btnAgregar.addActionListener(e -> {
-            int fila = tablaMenu.getSelectedRow();
-            if (fila >= 0) {
-                String cod = modeloMenu.getValueAt(fila, 0).toString();
-                String prod = modeloMenu.getValueAt(fila, 1).toString();
-                String precio = modeloMenu.getValueAt(fila, 2).toString();
-                // Lo añade al carrito con cantidad 1
-                modeloCarrito.addRow(new Object[]{cod, prod, "1", precio});
-                calcularTotal();
-            } else {
-                JOptionPane.showMessageDialog(this, "Seleccione un producto del menú.");
-            }
-        });
-
-        cardPanel.add(lblTituloCard);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        cardPanel.add(scrollMenu);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        cardPanel.add(btnAgregar);
-
-        return cardPanel;
     }
 
     // ==========================================================
@@ -230,7 +359,7 @@ public class Snack extends JFrame {
         scrollCarrito.getViewport().setBackground(Color.WHITE);
         scrollCarrito.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
         
-        btnQuitar = crearBoton("✖ Quitar Producto", new Color(239, 68, 68)); // Rojo
+        btnQuitar = crearBoton("Quitar Producto", new Color(239, 68, 68)); // Rojo
         btnQuitar.addActionListener(e -> {
             int fila = tablaCarrito.getSelectedRow();
             if (fila >= 0) {
@@ -263,31 +392,46 @@ public class Snack extends JFrame {
             int numHabitacion = Integer.parseInt(habStr);
             
             ConsumoArchivo ca = new ConsumoArchivo();
+            SnackArchivo snackArch = new SnackArchivo();
             for (int i = 0; i < modeloCarrito.getRowCount(); i++) {
                 Consumo c = new Consumo();
                 c.setIdConsumo((int)(System.currentTimeMillis() % Integer.MAX_VALUE) + i); // ID Aleatorio simple
                 c.setNumeroHabitacion(numHabitacion);
-                c.setCodigoSnack(modeloCarrito.getValueAt(i, 0).toString().replace(",", "."));
-                c.setCantidad(Integer.parseInt(modeloCarrito.getValueAt(i, 2).toString()));
+                String codSnack = modeloCarrito.getValueAt(i, 0).toString().replace(",", ".");
+                int cantidad = Integer.parseInt(modeloCarrito.getValueAt(i, 2).toString());
+                
+                c.setCodigoSnack(codSnack);
+                c.setCantidad(cantidad);
                 c.setSubtotal(Double.parseDouble(modeloCarrito.getValueAt(i, 3).toString().replace(",", ".")));
                 ca.registrar(c);
+                
+                // Restar stock
+                modelo.Snack s = snackArch.buscar(codSnack);
+                if (s != null) {
+                    s.setStock(Math.max(0, s.getStock() - cantidad));
+                    snackArch.actualizar(s);
+                }
             }
             
             JOptionPane.showMessageDialog(this, "Consumo cargado a la Habitación " + numHabitacion);
             modeloCarrito.setRowCount(0);
+            cargarDatosMenu();
             calcularTotal();
             cmbHabitaciones.setSelectedIndex(0);
         });
         
+        JPanel panelBotonesDerecha = new JPanel(new GridLayout(2, 1, 0, 10));
+        panelBotonesDerecha.setOpaque(false);
+        panelBotonesDerecha.add(btnQuitar);
+        panelBotonesDerecha.add(btnRegistrar);
+        
         panelTotal.add(lblTotal, BorderLayout.WEST);
-        panelTotal.add(btnRegistrar, BorderLayout.EAST);
+        panelTotal.add(panelBotonesDerecha, BorderLayout.EAST);
 
         // Ensamblar Tarjeta Derecha
         cardPanel.add(panelDestino);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         cardPanel.add(scrollCarrito);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        cardPanel.add(btnQuitar);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         cardPanel.add(panelTotal);
 

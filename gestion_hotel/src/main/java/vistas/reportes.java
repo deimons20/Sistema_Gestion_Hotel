@@ -10,6 +10,22 @@ import javax.swing.table.JTableHeader;
 import persistencia.*;
 import modelo.*;
 import java.util.ArrayList;
+import java.io.File;
+import java.io.FileOutputStream;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class reportes extends JFrame {
 
@@ -23,7 +39,7 @@ public class reportes extends JFrame {
     private JButton btnGenerar, btnExportarPDF, btnExportarExcel;
 
     public reportes() {
-        setTitle("Hotel Paraíso - Reportes y Estadísticas");
+        setTitle("Hotel Mapocho - Reportes y Estadísticas");
         setSize(1050, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -122,9 +138,7 @@ public class reportes extends JFrame {
             "Ingresos del Hotel", 
             "Habitaciones Ocupadas", 
             "Habitaciones Disponibles", 
-            "Reservas", 
-            "Directorio de Clientes", 
-            "Consumos del Snack"
+            "Reservas"
         };
         cmbTipoReporte = new JComboBox<>(opciones);
         cmbTipoReporte.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -182,18 +196,6 @@ public class reportes extends JFrame {
                         modeloTabla.setColumnIdentifiers(new String[]{"Cód. Reserva", "Cliente DNI", "Habitación", "Ingreso", "Salida"});
                         for (Reserva r : new ReservaArchivo().listar()) {
                             modeloTabla.addRow(new Object[]{r.getCodigoReserva(), r.getIdCliente(), r.getNumeroHabitacion(), r.getFechaIngreso(), r.getFechaSalida()});
-                        }
-                        break;
-                    case 5: // Directorio de Clientes
-                        modeloTabla.setColumnIdentifiers(new String[]{"DNI", "Nombres", "Apellidos", "Teléfono"});
-                        for (Cliente c : new ClienteArchivo().listar()) {
-                            modeloTabla.addRow(new Object[]{c.getIdCliente(), c.getNombres(), c.getApellidos(), c.getTelefono()});
-                        }
-                        break;
-                    case 6: // Consumos del Snack (Activos)
-                        modeloTabla.setColumnIdentifiers(new String[]{"ID Consumo", "Habitación", "Cód. Snack", "Cantidad", "Subtotal"});
-                        for (Consumo c : new ConsumoArchivo().listar()) {
-                            modeloTabla.addRow(new Object[]{c.getIdConsumo(), c.getNumeroHabitacion(), c.getCodigoSnack(), c.getCantidad(), "S/ " + c.getSubtotal()});
                         }
                         break;
                 }
@@ -259,12 +261,100 @@ public class reportes extends JFrame {
 
         btnExportarPDF = crearBoton("Exportar a PDF", new Color(239, 68, 68)); // Rojo
         btnExportarPDF.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Reporte exportado correctamente a 'C:\\\\ReportesHotel\\\\reporte.pdf'");
+            if(modeloTabla.getRowCount() == 0 || cmbTipoReporte.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(this, "No hay datos para exportar.");
+                return;
+            }
+            try {
+                String folderPath = "C:\\Users\\rojas\\OneDrive\\Documentos\\ReporteHotel";
+                File folder = new File(folderPath);
+                if(!folder.exists()) folder.mkdirs();
+                
+                String tipo = cmbTipoReporte.getSelectedItem().toString().replace(" ", "_");
+                String path = folderPath + "\\Reporte_" + tipo + ".pdf";
+                
+                Document document = new Document();
+                PdfWriter.getInstance(document, new FileOutputStream(path));
+                document.open();
+                
+                com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+                Paragraph titulo = new Paragraph("Reporte: " + cmbTipoReporte.getSelectedItem().toString() + "\n\n", titleFont);
+                titulo.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                document.add(titulo);
+                
+                int numCols = modeloTabla.getColumnCount();
+                PdfPTable table = new PdfPTable(numCols);
+                table.setWidthPercentage(100);
+                
+                for(int i=0; i<numCols; i++) {
+                    PdfPCell c = new PdfPCell(new Phrase(tablaReportes.getColumnName(i), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+                    c.setBackgroundColor(com.itextpdf.text.BaseColor.LIGHT_GRAY);
+                    table.addCell(c);
+                }
+                
+                for(int i=0; i<modeloTabla.getRowCount(); i++) {
+                    for(int j=0; j<numCols; j++) {
+                        table.addCell(modeloTabla.getValueAt(i, j) != null ? modeloTabla.getValueAt(i, j).toString() : "");
+                    }
+                }
+                document.add(table);
+                document.close();
+                JOptionPane.showMessageDialog(this, "Reporte PDF guardado en:\n" + path);
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al generar PDF: " + ex.getMessage());
+            }
         });
 
         btnExportarExcel = crearBoton("Exportar a Excel", new Color(16, 185, 129)); // Verde
         btnExportarExcel.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Reporte exportado correctamente a 'C:\\\\ReportesHotel\\\\reporte.xlsx'");
+            if(modeloTabla.getRowCount() == 0 || cmbTipoReporte.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(this, "No hay datos para exportar.");
+                return;
+            }
+            try {
+                String folderPath = "C:\\Users\\rojas\\OneDrive\\Documentos\\ReporteHotel";
+                File folder = new File(folderPath);
+                if(!folder.exists()) folder.mkdirs();
+                
+                String tipo = cmbTipoReporte.getSelectedItem().toString().replace(" ", "_");
+                String path = folderPath + "\\Reporte_" + tipo + ".xlsx";
+                
+                Workbook workbook = new XSSFWorkbook();
+                Sheet sheet = workbook.createSheet("Reporte");
+                
+                // Cabeceras
+                Row headerRow = sheet.createRow(0);
+                for(int i=0; i<modeloTabla.getColumnCount(); i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(tablaReportes.getColumnName(i));
+                }
+                
+                // Filas
+                for(int i=0; i<modeloTabla.getRowCount(); i++) {
+                    Row row = sheet.createRow(i + 1);
+                    for(int j=0; j<modeloTabla.getColumnCount(); j++) {
+                        Cell cell = row.createCell(j);
+                        Object val = modeloTabla.getValueAt(i, j);
+                        cell.setCellValue(val != null ? val.toString() : "");
+                    }
+                }
+                
+                // Auto size columns
+                for(int i=0; i<modeloTabla.getColumnCount(); i++) {
+                    sheet.autoSizeColumn(i);
+                }
+                
+                FileOutputStream fileOut = new FileOutputStream(path);
+                workbook.write(fileOut);
+                fileOut.close();
+                workbook.close();
+                
+                JOptionPane.showMessageDialog(this, "Reporte Excel guardado en:\n" + path);
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al generar Excel: " + ex.getMessage());
+            }
         });
 
         panel.add(btnExportarPDF);
