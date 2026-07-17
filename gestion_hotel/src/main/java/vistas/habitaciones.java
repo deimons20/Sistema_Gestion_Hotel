@@ -25,7 +25,7 @@ public class habitaciones extends JFrame {
     private final Color COLOR_MANTENIMIENTO = new Color(100, 116, 139); 
 
     public habitaciones() {
-        setTitle("Hotel Paraíso - Estado de Habitaciones");
+        setTitle("Hotel Mapocho - Estado de Habitaciones");
         setSize(1000, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -252,7 +252,7 @@ public class habitaciones extends JFrame {
             }
 
             btnHabitacion.addActionListener((ActionEvent e) -> {
-                String tipoHab = tituloPiso.substring(9, tituloPiso.indexOf(")"));
+                String tipoHab = tituloPiso.substring(8, tituloPiso.indexOf(")"));
                 actualizarDetalles(numero, estado, tipoHab);
             });
 
@@ -387,8 +387,27 @@ public class habitaciones extends JFrame {
         } else if (estado.equals("OCUPADA")) {
             lblEstadoValor.setText("OCUPADA");
             lblEstadoValor.setForeground(COLOR_OCUPADA);
-            lblHuespedValor.setText("Consultar Sistema");
-            lblFechaValor.setText("Consulte Checkout");
+            
+            persistencia.ReservaArchivo ra = new persistencia.ReservaArchivo();
+            modelo.Reserva reservaActiva = null;
+            for (modelo.Reserva r : ra.listar()) {
+                if (r.getNumeroHabitacion() == Integer.parseInt(numero)) {
+                    reservaActiva = r;
+                }
+            }
+            if (reservaActiva != null) {
+                persistencia.ClienteArchivo ca = new persistencia.ClienteArchivo();
+                modelo.Cliente c = ca.buscar(String.valueOf(reservaActiva.getIdCliente()));
+                if (c != null) {
+                    lblHuespedValor.setText(c.getNombres() + " " + c.getApellidos());
+                } else {
+                    lblHuespedValor.setText("Cliente ID: " + reservaActiva.getIdCliente());
+                }
+                lblFechaValor.setText(reservaActiva.getFechaSalida() != null ? reservaActiva.getFechaSalida() : "Consulte Checkout");
+            } else {
+                lblHuespedValor.setText("Consultar Sistema");
+                lblFechaValor.setText("Consulte Checkout");
+            }
             
             btnAccionPrincipal.setText("Procesar Check-Out");
             btnAccionPrincipal.setBackground(new Color(59, 130, 246)); 
@@ -401,7 +420,62 @@ public class habitaciones extends JFrame {
                 this.dispose();
             });
 
-            btnAccionSecundaria.setVisible(false);
+            btnAccionSecundaria.setText("Extender Estadía");
+            btnAccionSecundaria.setVisible(true);
+            btnAccionSecundaria.setBackground(new Color(139, 92, 246)); 
+            quitarEventos(btnAccionSecundaria);
+            final modelo.Reserva rFinal = reservaActiva;
+            btnAccionSecundaria.addActionListener(e -> {
+                if (rFinal != null) {
+                    String input = JOptionPane.showInputDialog(this, "¿Cuántos días adicionales desea quedarse?");
+                    if (input != null && !input.trim().isEmpty()) {
+                        try {
+                            int dias = Integer.parseInt(input.trim());
+                            if (dias > 0) {
+                                String fOutStr = rFinal.getFechaSalida();
+                                String fechaBase = fOutStr.substring(0, 10);
+                                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                                java.time.LocalDate dOut = java.time.LocalDate.parse(fechaBase, fmt);
+                                dOut = dOut.plusDays(dias);
+                                String nuevaFecha = dOut.format(fmt);
+                                
+                                if (fOutStr.length() > 10) {
+                                    nuevaFecha += fOutStr.substring(10);
+                                } else {
+                                    nuevaFecha += " - 12:00 m.";
+                                }
+                                
+                                rFinal.setFechaSalida(nuevaFecha);
+                                persistencia.ReservaArchivo ra2 = new persistencia.ReservaArchivo();
+                                ra2.actualizar(rFinal);
+                                
+                                persistencia.HabitacionArchivo ha2 = new persistencia.HabitacionArchivo();
+                                modelo.Habitacion h2 = ha2.buscar(numero);
+                                double precioBase = h2 != null ? h2.getPrecio() : 0.0;
+                                
+                                if (precioBase > 0) {
+                                    persistencia.ConsumoArchivo ca2 = new persistencia.ConsumoArchivo();
+                                    modelo.Consumo c2 = new modelo.Consumo();
+                                    c2.setIdConsumo((int)(Math.random() * 900000) + 100000);
+                                    c2.setNumeroHabitacion(Integer.parseInt(numero));
+                                    c2.setCodigoSnack("ESTADIA_EXT");
+                                    c2.setCantidad(dias);
+                                    c2.setSubtotal(precioBase * dias);
+                                    ca2.registrar(c2);
+                                }
+                                
+                                JOptionPane.showMessageDialog(this, "Estadía extendida por " + dias + " días.\\nSe ha cargado el costo a la habitación automáticamente.");
+                                new habitaciones().setVisible(true);
+                                this.dispose();
+                            }
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(this, "Número de días inválido o error en la fecha.");
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se encontró la reserva activa para extender.");
+                }
+            });
 
         } else if (estado.equals("RESERVADA")) {
             lblEstadoValor.setText("RESERVADA");

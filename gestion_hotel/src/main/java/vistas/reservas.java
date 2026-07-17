@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class reservas extends JFrame {
 
     private JTextField txtDNICliente;
+    private JTextField txtNombreCliente;
     private JComboBox<String> cmbNumHabitacion;
     private JTextField txtFechaIngreso;
     private JTextField txtFechaSalida;
@@ -23,7 +24,7 @@ public class reservas extends JFrame {
     private JButton btnGuardar, btnCancelar, btnIrCheckIn;
 
     public reservas() {
-        setTitle("Hotel Paraíso - Gestión de Reservas");
+        setTitle("Hotel Mapocho - Gestión de Reservas");
         setSize(1100, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -51,15 +52,38 @@ public class reservas extends JFrame {
         if (modeloTabla == null) return;
         modeloTabla.setRowCount(0);
         ReservaArchivo ra = new ReservaArchivo();
+        HabitacionArchivo ha = new HabitacionArchivo();
         for (Reserva r : ra.listar()) {
-            modeloTabla.addRow(new Object[]{
-                r.getCodigoReserva(),
-                r.getIdCliente(),
-                "Hab. " + r.getNumeroHabitacion(),
-                r.getFechaIngreso(),
-                r.getFechaSalida()
-            });
+            Habitacion h = ha.buscar(String.valueOf(r.getNumeroHabitacion()));
+            if (h != null && h.getEstado().equals("RESERVADA")) {
+                modeloTabla.addRow(new Object[]{
+                    r.getCodigoReserva(),
+                    r.getIdCliente(),
+                    "Hab. " + r.getNumeroHabitacion(),
+                    r.getFechaIngreso(),
+                    r.getFechaSalida()
+                });
+            }
         }
+    }
+    
+    private void aplicarFiltroNumerico(JTextField txt, int limite) {
+        ((javax.swing.text.AbstractDocument) txt.getDocument()).setDocumentFilter(new javax.swing.text.DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr) throws javax.swing.text.BadLocationException {
+                if (string == null) return;
+                if ((fb.getDocument().getLength() + string.length()) <= limite && string.matches("\\d+")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
+                if (text == null) return;
+                if ((fb.getDocument().getLength() + text.length() - length) <= limite && text.matches("\\d+")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private JPanel crearCabecera() {
@@ -127,10 +151,27 @@ public class reservas extends JFrame {
         lblTituloCard.setForeground(new Color(30, 41, 59));
         lblTituloCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel formPanel = new JPanel(new GridLayout(4, 1, 0, 20));
+        JPanel formPanel = new JPanel(new GridLayout(5, 1, 0, 15));
         formPanel.setOpaque(false);
         
         txtDNICliente = crearTextFieldMaterial("DNI del Cliente");
+        txtDNICliente.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                String dniStr = txtDNICliente.getText().trim();
+                if (!dniStr.isEmpty()) {
+                    ClienteArchivo ca = new ClienteArchivo();
+                    Cliente c = ca.buscar(dniStr);
+                    if (c != null) {
+                        txtNombreCliente.setText(c.getNombres() + " " + c.getApellidos());
+                    } else {
+                        txtNombreCliente.setText("");
+                    }
+                }
+            }
+        });
+
+        txtNombreCliente = crearTextFieldMaterial("Nombre Completo (Obligatorio)");
+        txtNombreCliente.setEditable(true);
         
         cmbNumHabitacion = new JComboBox<>();
         cmbNumHabitacion.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -146,9 +187,15 @@ public class reservas extends JFrame {
         } catch (Exception ex) {}
 
         txtFechaIngreso = crearTextFieldMaterial("Fecha Llegada (DD/MM/AAAA)");
+        agregarFormatoFecha(txtFechaIngreso);
+        
         txtFechaSalida = crearTextFieldMaterial("Fecha Salida (DD/MM/AAAA)");
+        agregarFormatoFecha(txtFechaSalida);
+        
+        aplicarFiltroNumerico(txtDNICliente, 8);
         
         formPanel.add(txtDNICliente);
+        formPanel.add(txtNombreCliente);
         formPanel.add(cmbNumHabitacion);
         formPanel.add(txtFechaIngreso);
         formPanel.add(txtFechaSalida);
@@ -174,8 +221,35 @@ public class reservas extends JFrame {
                     return;
                 }
                 
+                if (dniStr.length() != 8) {
+                    JOptionPane.showMessageDialog(this, "El DNI debe tener exactamente 8 dígitos.");
+                    return;
+                }
+                
+                if (fecIn.length() != 10 || fecOut.length() != 10) {
+                    JOptionPane.showMessageDialog(this, "Las fechas deben tener el formato completo (DD/MM/AAAA). Ej: 17/07/2026");
+                    return;
+                }
+                
                 int dni = Integer.parseInt(dniStr);
                 int numHab = Integer.parseInt(habStr);
+                
+                ClienteArchivo ca = new ClienteArchivo();
+                if (ca.buscar(dniStr) == null) {
+                    String nombreCompleto = txtNombreCliente.getText().trim();
+                    if (nombreCompleto.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "El cliente es nuevo, debe ingresar su Nombre Completo.");
+                        return;
+                    }
+                    Cliente nuevoCli = new Cliente();
+                    nuevoCli.setIdCliente(dni);
+                    nuevoCli.setDni(dniStr);
+                    String[] partes = nombreCompleto.split(" ", 2);
+                    nuevoCli.setNombres(partes[0]);
+                    nuevoCli.setApellidos(partes.length > 1 ? partes[1] : "");
+                    nuevoCli.setTelefono("Por definir");
+                    ca.registrar(nuevoCli);
+                }
                 
                 HabitacionArchivo ha = new HabitacionArchivo();
                 Habitacion h = ha.buscar(String.valueOf(numHab));
@@ -204,6 +278,7 @@ public class reservas extends JFrame {
                 
                 JOptionPane.showMessageDialog(this, "Reserva registrada con éxito.");
                 txtDNICliente.setText("");
+                txtNombreCliente.setText("");
                 cmbNumHabitacion.setSelectedIndex(0);
                 txtFechaIngreso.setText("");
                 txtFechaSalida.setText("");
@@ -286,8 +361,14 @@ public class reservas extends JFrame {
         });
         
         btnIrCheckIn.addActionListener(e -> {
-            new checkin().setVisible(true);
-            this.dispose();
+            int fila = tablaReservas.getSelectedRow();
+            if (fila >= 0) {
+                String habStr = modeloTabla.getValueAt(fila, 2).toString().replace("Hab. ", "").trim();
+                new checkin(habStr).setVisible(true);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Seleccione una reserva de la tabla para ir a Check-In.");
+            }
         });
 
         panelAcciones.add(btnCancelar);
@@ -312,6 +393,29 @@ public class reservas extends JFrame {
         placeholder.setFont(new Font("Segoe UI", Font.ITALIC, 13));
         placeholder.setForeground(new Color(148, 163, 184));
         return txt;
+    }
+
+    private void agregarFormatoFecha(JTextField txt) {
+        txt.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(java.awt.event.KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isDigit(c)) {
+                    e.consume(); // Solo permitir números
+                }
+            }
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() != java.awt.event.KeyEvent.VK_BACK_SPACE) {
+                    String texto = txt.getText();
+                    if (texto.length() == 2 || texto.length() == 5) {
+                        txt.setText(texto + "/");
+                    } else if (texto.length() > 10) {
+                        txt.setText(texto.substring(0, 10)); // Limitar a 10 caracteres
+                    }
+                }
+            }
+        });
     }
 
     private JButton crearBoton(String texto, Color colorFondo) {

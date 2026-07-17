@@ -32,7 +32,7 @@ public class clientes extends JFrame {
     private Cliente clienteSeleccionado = null;
 
     public clientes() {
-        setTitle("Hotel Paraíso - Gestión de Clientes");
+        setTitle("Hotel Mapocho - Gestión de Clientes");
         setSize(1050, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -253,6 +253,9 @@ public class clientes extends JFrame {
         txtApellidos = crearTextFieldMaterial("Apellidos");
         txtTelefono = crearTextFieldMaterial("Teléfono / Celular");
         
+        aplicarFiltroNumerico(txtDNI, 8);
+        aplicarFiltroNumerico(txtTelefono, 9);
+        
         formPanel.add(txtDNI);
         formPanel.add(txtNombres);
         formPanel.add(txtApellidos);
@@ -277,6 +280,16 @@ public class clientes extends JFrame {
             
             if(dni.isEmpty() || nombres.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "DNI y Nombres son obligatorios.");
+                return;
+            }
+            
+            if(dni.length() != 8) {
+                JOptionPane.showMessageDialog(null, "El DNI debe tener exactamente 8 dígitos.");
+                return;
+            }
+            
+            if(!telefono.isEmpty() && telefono.length() != 9) {
+                JOptionPane.showMessageDialog(null, "El teléfono debe tener exactamente 9 dígitos.");
                 return;
             }
             
@@ -330,7 +343,7 @@ public class clientes extends JFrame {
         botonesPanel.add(btnEliminar);
 
         // Ensamblar Tarjeta
-        cardPanel.add(avatarPanel);
+        // cardPanel.add(avatarPanel); // Se removió el avatar a petición
         cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         cardPanel.add(lblTituloCard);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 30)));
@@ -381,6 +394,25 @@ public class clientes extends JFrame {
         txtTelefono.setText("");
         tablaClientes.clearSelection();
         clienteSeleccionado = null;
+    }
+
+    private void aplicarFiltroNumerico(JTextField txt, int limite) {
+        ((javax.swing.text.AbstractDocument) txt.getDocument()).setDocumentFilter(new javax.swing.text.DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr) throws javax.swing.text.BadLocationException {
+                if (string == null) return;
+                if ((fb.getDocument().getLength() + string.length()) <= limite && string.matches("\\d+")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
+                if (text == null) return;
+                if ((fb.getDocument().getLength() + text.length() - length) <= limite && text.matches("\\d+")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
 

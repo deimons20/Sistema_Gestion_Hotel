@@ -16,7 +16,7 @@ public class menu extends JFrame {
 
     public menu() {
         // 1. Configuración de la Ventana Principal
-        setTitle("Hotel Paraíso - Menú Principal");
+        setTitle("Hotel Mapocho - Menú Principal");
         setSize(1000, 680);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -89,8 +89,8 @@ public class menu extends JFrame {
         lblRol.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // --- Info Adicional del Hotel ---
-        JLabel lblInfo = new JLabel("<html><center><br><br>🏨 Hotel Paraíso Ica<br>🟢 Sistema En Línea</center></html>");
-        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JLabel lblInfo = new JLabel("<html><center><br><br>🏨 Hotel Mapocho Ica<br></center></html>");
+        lblInfo.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
         lblInfo.setForeground(new Color(203, 213, 225));
         lblInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -98,7 +98,7 @@ public class menu extends JFrame {
         JButton btnCerrarSesion = new JButton("Cerrar Sesión");
         btnCerrarSesion.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         btnCerrarSesion.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnCerrarSesion.setBackground(new Color(239, 68, 68)); // Rojo
+        btnCerrarSesion.setBackground(new Color(239, 68, 68));
         btnCerrarSesion.setForeground(Color.WHITE);
         btnCerrarSesion.setFocusPainted(false);
         btnCerrarSesion.setBorderPainted(false);
@@ -209,7 +209,8 @@ public class menu extends JFrame {
 
         // Etiqueta del Icono (Emoji o Texto grande)
         JLabel lblIcono = new JLabel(icono);
-        lblIcono.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
+        lblIcono.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 34));
+        lblIcono.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
         lblIcono.setForeground(colorIcono);
         lblIcono.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -235,7 +236,7 @@ public class menu extends JFrame {
             public void mouseEntered(MouseEvent e) {
                 // Efecto al pasar el mouse por encima
                 card.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(59, 130, 246), 2), // Borde azul
+                        BorderFactory.createLineBorder(new Color(59, 130, 246), 2),
                         BorderFactory.createEmptyBorder(18, 18, 18, 18)
                 ));
             }
@@ -281,7 +282,7 @@ public class menu extends JFrame {
                 this.dispose();
                 break;
             case "snack":
-                new Snack().setVisible(true); // Recuerda que tu clase se llama Snack (con S mayúscula)
+                new Snack().setVisible(true);
                 this.dispose();
                 break;
             case "reportes":
