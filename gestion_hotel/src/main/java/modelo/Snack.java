@@ -16,7 +16,6 @@ public class Snack {
         this.precio = precio;
     }
 
-    // Getters y Setters
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
 

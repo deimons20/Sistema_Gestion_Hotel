@@ -78,13 +78,12 @@ public class UsuarioArchivo implements CRUD<Usuario> {
         return listar().stream().filter(u -> u.getIdUsuario() == idBusqueda).findFirst().orElse(null);
     }
     
-    // Método extra para el Login uwu
     public Usuario validarLogin(String username, String password) {
         for (Usuario u : listar()) {
             if (u.getUsername().equals(username) && u.getPassword().equals(password)) {
-                return u; // Login exitoso
+                return u; 
             }
         }
-        return null; // Credenciales incorrectas
+        return null;
     }
 }

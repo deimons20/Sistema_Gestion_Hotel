@@ -16,7 +16,6 @@ public class Persona {
         this.telefono = telefono;
     }
 
-    // Getters y Setters
     public String getDni() { return dni; }
     public void setDni(String dni) { this.dni = dni; }
 

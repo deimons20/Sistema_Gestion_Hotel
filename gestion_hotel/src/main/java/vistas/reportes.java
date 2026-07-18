@@ -29,7 +29,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class reportes extends JFrame {
 
-    // Componentes
     private JComboBox<String> cmbTipoReporte;
     private JTextField txtFechaInicio;
     private JTextField txtFechaFin;
@@ -45,13 +44,11 @@ public class reportes extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         
-        // Fondo principal
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(241, 245, 249)); // Gris claro
+        mainPanel.setBackground(new Color(241, 245, 249));
         
         mainPanel.add(crearCabecera(), BorderLayout.NORTH);
         
-        // Panel central (Filtros + Tabla + Exportar)
         JPanel contentPanel = new JPanel(new BorderLayout(0, 20));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
@@ -64,9 +61,7 @@ public class reportes extends JFrame {
         add(mainPanel);
     }
 
-    // ==========================================================
-    // 1. CABECERA
-    // ==========================================================
+    // Header
     private JPanel crearCabecera() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(30, 41, 59)); 
@@ -109,11 +104,8 @@ public class reportes extends JFrame {
         return header;
     }
 
-    // ==========================================================
-    // 2. PANEL DE FILTROS (Arriba)
-    // ==========================================================
+    //  Panel de filtros
     private JPanel crearPanelFiltros() {
-        // Panel estilo Tarjeta (Card)
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -132,7 +124,6 @@ public class reportes extends JFrame {
         lblTipo.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblTipo.setForeground(new Color(71, 85, 105));
 
-        // Opciones del combobox basadas en los requerimientos
         String[] opciones = {
             "Seleccionar...", 
             "Ingresos del Hotel", 
@@ -148,17 +139,14 @@ public class reportes extends JFrame {
             if (btnGenerar != null) btnGenerar.doClick();
         });
 
-        // Campos de fecha estilo Material (Sin librerías externas)
         txtFechaInicio = crearTextFieldMaterial("Fecha Inicio (DD/MM/AAAA)");
         txtFechaInicio.setPreferredSize(new Dimension(180, 35));
         
         txtFechaFin = crearTextFieldMaterial("Fecha Fin (DD/MM/AAAA)");
         txtFechaFin.setPreferredSize(new Dimension(180, 35));
 
-        // Botón Generar
-        btnGenerar = crearBoton("Generar Reporte", new Color(59, 130, 246)); // Azul
+        btnGenerar = crearBoton("Generar Reporte", new Color(59, 130, 246));
         
-        // Evento temporal para vaciar la tabla y simular carga
         btnGenerar.addActionListener(e -> {
             int opcion = cmbTipoReporte.getSelectedIndex();
             if (opcion == 0) {
@@ -170,13 +158,13 @@ public class reportes extends JFrame {
             
             try {
                 switch(opcion) {
-                    case 1: // Ingresos del Hotel
+                    case 1:
                         modeloTabla.setColumnIdentifiers(new String[]{"ID Pago", "Total", "Método Pago"});
                         for (Pago p : new PagoArchivo().listar()) {
                             modeloTabla.addRow(new Object[]{p.getIdPago(), "S/ " + p.getMontoTotal(), p.getMetodoPago()});
                         }
                         break;
-                    case 2: // Habitaciones Ocupadas
+                    case 2:
                         modeloTabla.setColumnIdentifiers(new String[]{"Nº", "Tipo", "Precio", "Estado"});
                         for (Habitacion h : new HabitacionArchivo().listar()) {
                             if (h.getEstado().equals("OCUPADA")) {
@@ -184,7 +172,7 @@ public class reportes extends JFrame {
                             }
                         }
                         break;
-                    case 3: // Habitaciones Disponibles
+                    case 3:
                         modeloTabla.setColumnIdentifiers(new String[]{"Nº", "Tipo", "Precio", "Estado"});
                         for (Habitacion h : new HabitacionArchivo().listar()) {
                             if (h.getEstado().equals("LIBRE")) {
@@ -192,7 +180,7 @@ public class reportes extends JFrame {
                             }
                         }
                         break;
-                    case 4: // Reservas
+                    case 4:
                         modeloTabla.setColumnIdentifiers(new String[]{"Cód. Reserva", "Cliente DNI", "Habitación", "Ingreso", "Salida"});
                         for (Reserva r : new ReservaArchivo().listar()) {
                             modeloTabla.addRow(new Object[]{r.getCodigoReserva(), r.getIdCliente(), r.getNumeroHabitacion(), r.getFechaIngreso(), r.getFechaSalida()});
@@ -215,14 +203,10 @@ public class reportes extends JFrame {
         return panel;
     }
 
-    // ==========================================================
-    // 3. PANEL DE TABLA (Centro)
-    // ==========================================================
     private JPanel crearPanelTabla() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        // Modelo vacío (sin datos falsos)
         String[] columnasIniciales = {"---", "---", "---", "---"};
         modeloTabla = new DefaultTableModel(columnasIniciales, 0) {
             @Override
@@ -252,14 +236,11 @@ public class reportes extends JFrame {
         return panel;
     }
 
-    // ==========================================================
-    // 4. PANEL DE BOTONES DE EXPORTACIÓN (Abajo)
-    // ==========================================================
     private JPanel crearPanelExportar() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         panel.setOpaque(false);
 
-        btnExportarPDF = crearBoton("Exportar a PDF", new Color(239, 68, 68)); // Rojo
+        btnExportarPDF = crearBoton("Exportar a PDF", new Color(239, 68, 68));
         btnExportarPDF.addActionListener(e -> {
             if(modeloTabla.getRowCount() == 0 || cmbTipoReporte.getSelectedIndex() == 0) {
                 JOptionPane.showMessageDialog(this, "No hay datos para exportar.");
@@ -306,7 +287,7 @@ public class reportes extends JFrame {
             }
         });
 
-        btnExportarExcel = crearBoton("Exportar a Excel", new Color(16, 185, 129)); // Verde
+        btnExportarExcel = crearBoton("Exportar a Excel", new Color(16, 185, 129));
         btnExportarExcel.addActionListener(e -> {
             if(modeloTabla.getRowCount() == 0 || cmbTipoReporte.getSelectedIndex() == 0) {
                 JOptionPane.showMessageDialog(this, "No hay datos para exportar.");
@@ -323,14 +304,12 @@ public class reportes extends JFrame {
                 Workbook workbook = new XSSFWorkbook();
                 Sheet sheet = workbook.createSheet("Reporte");
                 
-                // Cabeceras
                 Row headerRow = sheet.createRow(0);
                 for(int i=0; i<modeloTabla.getColumnCount(); i++) {
                     Cell cell = headerRow.createCell(i);
                     cell.setCellValue(tablaReportes.getColumnName(i));
                 }
                 
-                // Filas
                 for(int i=0; i<modeloTabla.getRowCount(); i++) {
                     Row row = sheet.createRow(i + 1);
                     for(int j=0; j<modeloTabla.getColumnCount(); j++) {
@@ -340,7 +319,6 @@ public class reportes extends JFrame {
                     }
                 }
                 
-                // Auto size columns
                 for(int i=0; i<modeloTabla.getColumnCount(); i++) {
                     sheet.autoSizeColumn(i);
                 }
@@ -363,9 +341,6 @@ public class reportes extends JFrame {
         return panel;
     }
 
-    // ==========================================================
-    // MÉTODOS AUXILIARES DE DISEÑO
-    // ==========================================================
     private JTextField crearTextFieldMaterial(String placeholderTexto) {
         JTextField txt = new JTextField();
         txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -397,9 +372,7 @@ public class reportes extends JFrame {
         return btn;
     }
 
-    // ==========================================================
-    // CLASE INTERNA PARA EL PLACEHOLDER (Texto fantasma)
-    // ==========================================================
+
     class TextPrompt extends JLabel implements java.awt.event.FocusListener, javax.swing.event.DocumentListener {
         private JTextField component;
         public TextPrompt(String text, JTextField component) {

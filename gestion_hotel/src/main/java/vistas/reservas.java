@@ -200,7 +200,7 @@ public class reservas extends JFrame {
         formPanel.add(txtFechaIngreso);
         formPanel.add(txtFechaSalida);
 
-        btnGuardar = crearBoton("Guardar Reserva", new Color(139, 92, 246)); // Morado
+        btnGuardar = crearBoton("Guardar Reserva", new Color(139, 92, 246));
         btnGuardar.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnGuardar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         
@@ -210,7 +210,7 @@ public class reservas extends JFrame {
                 
                 String habStr = "";
                 if (cmbNumHabitacion.getSelectedIndex() > 0) {
-                    habStr = cmbNumHabitacion.getSelectedItem().toString().split(" ")[0]; // Obtener solo el número
+                    habStr = cmbNumHabitacion.getSelectedItem().toString().split(" ")[0]; 
                 }
                 
                 String fecIn = txtFechaIngreso.getText().trim();
@@ -327,7 +327,6 @@ public class reservas extends JFrame {
         scroll.getViewport().setBackground(Color.WHITE);
         scroll.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        // Panel de acciones inferior (Flujo UX)
         JPanel panelAcciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         panelAcciones.setOpaque(false);
         
@@ -411,7 +410,7 @@ public class reservas extends JFrame {
                     if (texto.length() == 2 || texto.length() == 5) {
                         txt.setText(texto + "/");
                     } else if (texto.length() > 10) {
-                        txt.setText(texto.substring(0, 10)); // Limitar a 10 caracteres
+                        txt.setText(texto.substring(0, 10));
                     }
                 }
             }

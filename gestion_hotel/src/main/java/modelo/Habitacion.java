@@ -16,7 +16,6 @@ public class Habitacion {
         this.precio = precio;
     }
 
-    // Getters y Setters
     public int getNumeroHabitacion() { return numeroHabitacion; }
     public void setNumeroHabitacion(int numeroHabitacion) { this.numeroHabitacion = numeroHabitacion; }
 

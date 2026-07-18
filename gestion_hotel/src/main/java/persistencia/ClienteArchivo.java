@@ -17,10 +17,10 @@ public class ClienteArchivo implements CRUD<Cliente> {
         try {
             File file = new File(RUTA);
             if (!file.getParentFile().exists()) {
-                file.getParentFile().mkdirs(); // Crea la carpeta archivos si no existe uwu
+                file.getParentFile().mkdirs();
             }
             if (!file.exists()) {
-                file.createNewFile(); // aqui lo que hacemos es crear un txt en caso no exista uno que coincida con la ruta
+                file.createNewFile();
             }
         } catch (IOException e) {
             System.out.println("Error al verificar archivo clientes: " + e.getMessage());
@@ -87,7 +87,7 @@ public class ClienteArchivo implements CRUD<Cliente> {
     public boolean eliminar(String id) {
         ArrayList<Cliente> lista = listar();
         int idBuscado = Integer.parseInt(id);
-        lista.removeIf(c -> c.getIdCliente() == idBuscado); //Aplicamos paradigma funcional(Lambda) uwu
+        lista.removeIf(c -> c.getIdCliente() == idBuscado);
         return sobrescribirArchivo(lista);
     }
 
