@@ -58,7 +58,6 @@ public class habitaciones extends JFrame {
         glassPanel.setOpaque(false);
         glassPanel.setLayout(new BorderLayout(25, 25));
         
-        // AQUÍ AJUSTAMOS LA TRANSPARENCIA (Cambiamos el 215 por 150)
         glassPanel.setBackground(new Color(15, 23, 42, 150)); 
         
         glassPanel.setPreferredSize(new Dimension(940, 600));
@@ -91,7 +90,6 @@ public class habitaciones extends JFrame {
         JPanel panelIzquierda = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         panelIzquierda.setOpaque(false);
 
-        // BOTÓN VOLVER
         JButton btnVolver = new JButton("<< Menú Principal") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -103,7 +101,6 @@ public class habitaciones extends JFrame {
         btnVolver.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnVolver.setForeground(Color.WHITE);
         btnVolver.setBackground(new Color(255, 255, 255, 40));
-        // Truco para anular el fondo blanco de Windows:
         btnVolver.setUI(new javax.swing.plaf.basic.BasicButtonUI()); 
         btnVolver.setOpaque(false);
         btnVolver.setBorderPainted(false);
@@ -162,7 +159,6 @@ public class habitaciones extends JFrame {
         ArrayList<Habitacion> listaHabitaciones = ha.listar();
 
         if (listaHabitaciones.isEmpty()) {
-            // Autogenerar habitaciones
             for (int i = 1; i <= 3; i++) {
                 String tipo = (i == 1) ? "Básica" : (i == 2) ? "Doble" : "Suite";
                 double precio = (i == 1) ? 90.00 : (i == 2) ? 160.00 : 320.00;
@@ -178,7 +174,6 @@ public class habitaciones extends JFrame {
             listaHabitaciones = ha.listar();
         }
 
-        // Separar por pisos
         ArrayList<String[]> piso1 = new ArrayList<>();
         ArrayList<String[]> piso2 = new ArrayList<>();
         ArrayList<String[]> piso3 = new ArrayList<>();
@@ -235,7 +230,6 @@ public class habitaciones extends JFrame {
             btnHabitacion.setFont(new Font("Segoe UI", Font.BOLD, 16));
             btnHabitacion.setForeground(Color.WHITE);
             
-            // TRUCO MAGICO: Desactiva el diseño nativo para que se pinte el color
             btnHabitacion.setUI(new javax.swing.plaf.basic.BasicButtonUI());
             btnHabitacion.setOpaque(true);
             btnHabitacion.setBorderPainted(false);
@@ -297,14 +291,12 @@ public class habitaciones extends JFrame {
 
         detallesPanel.add(Box.createVerticalGlue()); 
 
-        // BOTON DE ACCIÓN PRINCIPAL
         btnAccionPrincipal = new JButton("Acción");
         btnAccionPrincipal.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         btnAccionPrincipal.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAccionPrincipal.setForeground(Color.WHITE);
         btnAccionPrincipal.setBackground(new Color(59, 130, 246));
         
-        // TRUCO MAGICO AQUI TAMBIEN
         btnAccionPrincipal.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         btnAccionPrincipal.setOpaque(true);
         btnAccionPrincipal.setBorderPainted(false);
@@ -316,7 +308,6 @@ public class habitaciones extends JFrame {
         detallesPanel.add(btnAccionPrincipal);
         detallesPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // BOTON SECUNDARIO (Mantenimiento)
         btnAccionSecundaria = new JButton("Acción 2");
         btnAccionSecundaria.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         btnAccionSecundaria.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -360,8 +351,6 @@ public class habitaciones extends JFrame {
         lblTituloDetalle.setText("Habitación " + numero);
         lblTipoValor.setText(tipo);
 
-        // Se eliminaron los emojis para evitar los cuadrados extraños ()
-        // Lógica de visualización
         if (estado.equals("LIBRE")) {
             lblEstadoValor.setText("DISPONIBLE");
             lblEstadoValor.setForeground(COLOR_LIBRE);
@@ -520,7 +509,6 @@ public class habitaciones extends JFrame {
         if (h != null) {
             h.setEstado(nuevoEstado);
             ha.actualizar(h);
-            // Recargar la ventana actual para ver el cambio
             new habitaciones().setVisible(true);
             this.dispose();
         }

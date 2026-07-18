@@ -16,12 +16,10 @@ public class Pago {
         this.metodoPago = metodoPago;
     }
     
-    // Método base pensado para aplicar Polimorfismo más adelante
     public void procesarPago() {
         System.out.println("Procesando pago general por: S/" + montoTotal);
     }
 
-    // Getters y Setters
     public String getIdPago() { return idPago; }
     public void setIdPago(String idPago) { this.idPago = idPago; }
 

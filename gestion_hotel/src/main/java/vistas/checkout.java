@@ -45,7 +45,6 @@ public class checkout extends JFrame {
         
         mainPanel.add(crearCabecera(), BorderLayout.NORTH);
         
-        // Contenedor principal dividido en 2 columnas (Info Izquierda / Cuenta Derecha)
         JPanel contentPanel = new JPanel(new GridLayout(1, 2, 25, 0));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(25, 30, 30, 30));
@@ -57,9 +56,7 @@ public class checkout extends JFrame {
         add(mainPanel);
     }
 
-    // ==========================================================
-    // 1. CABECERA
-    // ==========================================================
+    // Header
     private JPanel crearCabecera() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(30, 41, 59)); 
@@ -102,9 +99,6 @@ public class checkout extends JFrame {
         return header;
     }
 
-    // ==========================================================
-    // 2. PANEL IZQUIERDO (BÚSQUEDA Y DATOS DEL HUÉSPED)
-    // ==========================================================
     private JPanel crearPanelDatosHuesped() {
         JPanel cardPanel = crearTarjetaBase();
         
@@ -112,7 +106,6 @@ public class checkout extends JFrame {
         lblTituloCard.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTituloCard.setForeground(new Color(30, 41, 59));
 
-        // Buscador
         JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
         searchPanel.setOpaque(false);
         searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
@@ -133,7 +126,6 @@ public class checkout extends JFrame {
         searchPanel.add(txtBusquedaHabitacion, BorderLayout.CENTER);
         searchPanel.add(btnBuscar, BorderLayout.EAST);
 
-        // Campos de información (Solo lectura)
         JPanel formPanel = new JPanel(new GridLayout(3, 1, 0, 25));
         formPanel.setOpaque(false);
         formPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
@@ -151,7 +143,6 @@ public class checkout extends JFrame {
         formPanel.add(txtFechaIngreso);
         formPanel.add(txtFechaSalida);
         
-        // Simular búsqueda
         btnBuscar.addActionListener(e -> {
             String habStr = txtBusquedaHabitacion.getText().trim();
             if (habStr.isEmpty()) {
@@ -197,7 +188,6 @@ public class checkout extends JFrame {
                 modeloCuenta.setRowCount(0);
                 double total = 0.0;
                 
-                // Buscar Consumos
                 ConsumoArchivo consArch = new ConsumoArchivo();
                 SnackArchivo sa = new SnackArchivo();
                 boolean hasEstadia = false;
@@ -217,14 +207,13 @@ public class checkout extends JFrame {
                     total += cons.getSubtotal();
                 }
                 
-                // Cobrar la habitación si no se registró en Check-In (por retrocompatibilidad o error)
                 if (!hasEstadia) {
                     modeloCuenta.addRow(new Object[]{"Estadía - " + h.getTipo(), "1", String.format("%.2f", h.getPrecio())});
                     total += h.getPrecio();
                 }
                 
                 lblTotal.setText(String.format("TOTAL A PAGAR: S/ %.2f", total));
-                lblTotal.putClientProperty("totalValue", total); // Guardar valor para el cobro
+                lblTotal.putClientProperty("totalValue", total);
                 
             } catch(NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Número de habitación inválido.");
@@ -236,14 +225,11 @@ public class checkout extends JFrame {
         cardPanel.add(searchPanel);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 30)));
         cardPanel.add(formPanel);
-        cardPanel.add(Box.createVerticalGlue()); // Relleno
+        cardPanel.add(Box.createVerticalGlue());
 
         return cardPanel;
     }
 
-    // ==========================================================
-    // 3. PANEL DERECHO (ESTADO DE CUENTA)
-    // ==========================================================
     private JPanel crearPanelEstadoCuenta() {
         JPanel cardPanel = crearTarjetaBase();
         
@@ -251,7 +237,6 @@ public class checkout extends JFrame {
         lblTituloCard.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTituloCard.setForeground(new Color(30, 41, 59));
 
-        // Tabla de cargos (Habitación + Snacks)
         String[] columnas = {"Descripción", "Cant.", "Subtotal (S/)"};
         modeloCuenta = new DefaultTableModel(columnas, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -262,7 +247,7 @@ public class checkout extends JFrame {
         tablaCuenta.setRowHeight(35); 
         tablaCuenta.setShowGrid(false); 
         tablaCuenta.setIntercellSpacing(new Dimension(0, 0));
-        tablaCuenta.setSelectionBackground(Color.WHITE); // Sin selección visible
+        tablaCuenta.setSelectionBackground(Color.WHITE);
         tablaCuenta.setSelectionForeground(Color.BLACK);
         
         JTableHeader theader = tablaCuenta.getTableHeader();
@@ -276,7 +261,6 @@ public class checkout extends JFrame {
         scrollCuenta.getViewport().setBackground(Color.WHITE);
         scrollCuenta.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        // Total
         JPanel panelTotal = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelTotal.setOpaque(false);
         lblTotal = new JLabel("TOTAL A PAGAR: S/ 0.00");
@@ -284,7 +268,6 @@ public class checkout extends JFrame {
         lblTotal.setForeground(new Color(239, 68, 68)); // Rojo para deuda
         panelTotal.add(lblTotal);
 
-        // Botones de acción
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 15, 0));
         panelBotones.setOpaque(false);
         
@@ -310,24 +293,20 @@ public class checkout extends JFrame {
                 PdfWriter.getInstance(document, new FileOutputStream(path));
                 document.open();
                 
-                // Titulo
                 com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
                 Paragraph titulo = new Paragraph("Hotel Paraiso - Recibo de Check-Out\n\n", titleFont);
                 titulo.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 document.add(titulo);
                 
-                // Datos
                 com.itextpdf.text.Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
                 document.add(new Paragraph("Habitacion: " + hab, textFont));
                 document.add(new Paragraph("Huesped: " + txtCliente.getText(), textFont));
                 document.add(new Paragraph("Fecha Ingreso: " + txtFechaIngreso.getText(), textFont));
                 document.add(new Paragraph("Fecha Salida: " + txtFechaSalida.getText() + "\n\n", textFont));
                 
-                // Tabla
                 PdfPTable table = new PdfPTable(3);
                 table.setWidthPercentage(100);
                 
-                // Cabeceras
                 String[] headers = {"Descripcion", "Cant.", "Subtotal (S/)"};
                 for(String h : headers) {
                     PdfPCell c = new PdfPCell(new Phrase(h, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
@@ -336,7 +315,6 @@ public class checkout extends JFrame {
                     table.addCell(c);
                 }
                 
-                // Filas
                 for(int i=0; i<modeloCuenta.getRowCount(); i++) {
                     table.addCell(modeloCuenta.getValueAt(i, 0).toString());
                     table.addCell(modeloCuenta.getValueAt(i, 1).toString());
@@ -344,7 +322,6 @@ public class checkout extends JFrame {
                 }
                 document.add(table);
                 
-                // Total
                 com.itextpdf.text.Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, com.itextpdf.text.BaseColor.RED);
                 Paragraph total = new Paragraph("\n" + lblTotal.getText(), totalFont);
                 total.setAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
@@ -358,7 +335,7 @@ public class checkout extends JFrame {
             }
         });
         
-        btnProcesarSalida = crearBoton("Procesar Salida", new Color(16, 185, 129)); // Verde
+        btnProcesarSalida = crearBoton("Procesar Salida", new Color(16, 185, 129));
         
         btnProcesarSalida.addActionListener(e -> {
             if (modeloCuenta.getRowCount() == 0 || txtBusquedaHabitacion.getText().trim().isEmpty()) {
@@ -369,7 +346,6 @@ public class checkout extends JFrame {
             try {
                 int numHabitacion = Integer.parseInt(txtBusquedaHabitacion.getText().trim());
                 
-                // Guardar Pago
                 double totalPagado = 0.0;
                 Object val = lblTotal.getClientProperty("totalValue");
                 if (val != null) {
@@ -381,10 +357,9 @@ public class checkout extends JFrame {
                 p.setIdPago("PAG-" + System.currentTimeMillis());
                 p.setCodigoReserva("HAB-" + numHabitacion);
                 p.setMontoTotal(totalPagado);
-                p.setMetodoPago("Efectivo/Tarjeta"); // Asumido
+                p.setMetodoPago("Efectivo/Tarjeta");
                 pa.registrar(p);
                 
-                // Liberar Habitación
                 HabitacionArchivo ha = new HabitacionArchivo();
                 Habitacion h = ha.buscar(String.valueOf(numHabitacion));
                 if (h != null) {
@@ -392,7 +367,6 @@ public class checkout extends JFrame {
                     ha.actualizar(h);
                 }
                 
-                // Borrar Reservas y Consumos para limpiar
                 ReservaArchivo ra = new ReservaArchivo();
                 for (Reserva r : ra.listar()) {
                     if (r.getNumeroHabitacion() == numHabitacion) {
@@ -407,7 +381,6 @@ public class checkout extends JFrame {
 
                 JOptionPane.showMessageDialog(this, "¡Check-Out procesado! Pago registrado y habitación libre nuevamente.");
                 
-                // Volver al menu (Opcional, pero limpia)
                 new menu().setVisible(true);
                 this.dispose();
                 
@@ -430,9 +403,6 @@ public class checkout extends JFrame {
         return cardPanel;
     }
 
-    // ==========================================================
-    // MÉTODOS AUXILIARES
-    // ==========================================================
     private JPanel crearTarjetaBase() {
         JPanel panel = new JPanel() {
             @Override
@@ -481,11 +451,6 @@ public class checkout extends JFrame {
         return btn;
     }
 
-
-
-    // ==========================================================
-    // CLASE INTERNA PARA EL PLACEHOLDER
-    // ==========================================================
     class TextPrompt extends JLabel implements java.awt.event.FocusListener, javax.swing.event.DocumentListener {
         private JTextField component;
         public TextPrompt(String text, JTextField component) {

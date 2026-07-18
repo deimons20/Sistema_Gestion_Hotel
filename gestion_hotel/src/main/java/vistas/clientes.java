@@ -16,7 +16,6 @@ import java.util.ArrayList;
 
 public class clientes extends JFrame {
 
-    // Componentes del formulario
     private JTextField txtBusqueda;
     private JTable tablaClientes;
     private DefaultTableModel modeloTabla;
@@ -38,13 +37,11 @@ public class clientes extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         
-        // Fondo principal gris muy claro
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(241, 245, 249)); 
         
         mainPanel.add(crearCabecera(), BorderLayout.NORTH);
         
-        // Contenedor central dividido
         JPanel contentPanel = new JPanel(new BorderLayout(20, 0));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(20, 30, 30, 30));
@@ -66,12 +63,10 @@ public class clientes extends JFrame {
         }
     }
 
-    // ==========================================================
-    // 1. CABECERA
-    // ==========================================================
+    // Header
     private JPanel crearCabecera() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(30, 41, 59)); // Azul oscuro
+        header.setBackground(new Color(30, 41, 59));
         header.setBorder(new EmptyBorder(15, 25, 15, 25));
 
         JPanel panelIzquierda = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
@@ -111,15 +106,12 @@ public class clientes extends JFrame {
         return header;
     }
 
-    // ==========================================================
-    // 2. PANEL IZQUIERDO (LISTA DE CLIENTES)
-    // ==========================================================
+    //  Lista clientes
     private JPanel crearPanelDirectorio() {
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(450, 0));
 
-        // Buscador
         JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
         searchPanel.setBackground(Color.WHITE);
         searchPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -129,7 +121,7 @@ public class clientes extends JFrame {
         
         JLabel lblIconBuscar = new JLabel("🔍");
         txtBusqueda = new JTextField();
-        txtBusqueda.setBorder(null); // Quitar borde para que se vea limpio
+        txtBusqueda.setBorder(null);
         txtBusqueda.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         TextPrompt placeholder = new TextPrompt("Buscar por DNI o Nombre...", txtBusqueda);
         placeholder.setForeground(new Color(148, 163, 184));
@@ -137,22 +129,20 @@ public class clientes extends JFrame {
         searchPanel.add(lblIconBuscar, BorderLayout.WEST);
         searchPanel.add(txtBusqueda, BorderLayout.CENTER);
 
-        // Tabla personalizada
         String[] columnas = {"DNI", "Nombres", "Apellidos"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; } // No editable
+            public boolean isCellEditable(int row, int column) { return false; }
         };
         
         tablaClientes = new JTable(modeloTabla);
         tablaClientes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tablaClientes.setRowHeight(35); // Filas altas y cómodas
-        tablaClientes.setShowGrid(false); // Quitar cuadrícula fea
+        tablaClientes.setRowHeight(35);
+        tablaClientes.setShowGrid(false);
         tablaClientes.setIntercellSpacing(new Dimension(0, 0));
-        tablaClientes.setSelectionBackground(new Color(239, 246, 255)); // Azul clarito al seleccionar
+        tablaClientes.setSelectionBackground(new Color(239, 246, 255));
         tablaClientes.setSelectionForeground(new Color(30, 58, 138));
         
-        // Estilo de la cabecera de la tabla
         JTableHeader theader = tablaClientes.getTableHeader();
         theader.setBackground(new Color(248, 250, 252));
         theader.setForeground(new Color(100, 116, 139));
@@ -160,7 +150,6 @@ public class clientes extends JFrame {
         theader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(226, 232, 240)));
         ((DefaultTableCellRenderer)theader.getDefaultRenderer()).setHorizontalAlignment(JLabel.LEFT);
 
-        // Evento al hacer clic en una fila de la tabla
         tablaClientes.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -188,11 +177,7 @@ public class clientes extends JFrame {
         return panel;
     }
 
-    // ==========================================================
-    // 3. PANEL DERECHO (TARJETA DE PERFIL)
-    // ==========================================================
     private JPanel crearPanelPerfil() {
-        // Panel con bordes redondeados (Card)
         JPanel cardPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -209,7 +194,6 @@ public class clientes extends JFrame {
         cardPanel.setLayout(new BoxLayout(cardPanel, BoxLayout.Y_AXIS));
         cardPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
 
-        // --- AVATAR CIRCULAR GENERADO POR CÓDIGO ---
         JPanel avatarPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -220,12 +204,10 @@ public class clientes extends JFrame {
                 int size = 90;
                 int x = (getWidth() - size) / 2;
                 
-                // Círculo de fondo
-                g2.setColor(new Color(224, 231, 255)); // Azul muy suave
+                g2.setColor(new Color(224, 231, 255));
                 g2.fill(new Ellipse2D.Double(x, 0, size, size));
                 
-                // Texto (Inicial del usuario o un icono)
-                g2.setColor(new Color(79, 70, 229)); // Azul índigo
+                g2.setColor(new Color(79, 70, 229));
                 g2.setFont(new Font("Segoe UI Emoji", Font.BOLD, 40));
                 FontMetrics fm = g2.getFontMetrics();
                 String texto = "👤";
@@ -244,7 +226,6 @@ public class clientes extends JFrame {
         lblTituloCard.setForeground(new Color(30, 41, 59));
         lblTituloCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // --- CAMPOS DE TEXTO (Estilo Material Design) ---
         JPanel formPanel = new JPanel(new GridLayout(4, 1, 0, 15));
         formPanel.setOpaque(false);
         
@@ -261,7 +242,6 @@ public class clientes extends JFrame {
         formPanel.add(txtApellidos);
         formPanel.add(txtTelefono);
 
-        // --- BOTONES DE ACCIÓN ---
         JPanel botonesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         botonesPanel.setOpaque(false);
         
@@ -269,7 +249,6 @@ public class clientes extends JFrame {
         btnGuardar = crearBoton("Guardar Datos", new Color(16, 185, 129)); // Verde
         btnEliminar = crearBoton("Eliminar", new Color(239, 68, 68)); // Rojo
         
-        // Acciones básicas de UI
         btnNuevo.addActionListener(e -> limpiarFormulario());
         
         btnGuardar.addActionListener(e -> {
@@ -306,7 +285,6 @@ public class clientes extends JFrame {
                     JOptionPane.showMessageDialog(null, "Error al guardar el cliente.");
                 }
             } else {
-                // Actualizar
                 clienteSeleccionado.setDni(dni);
                 clienteSeleccionado.setNombres(nombres);
                 clienteSeleccionado.setApellidos(apellidos);
@@ -342,8 +320,6 @@ public class clientes extends JFrame {
         botonesPanel.add(btnGuardar);
         botonesPanel.add(btnEliminar);
 
-        // Ensamblar Tarjeta
-        // cardPanel.add(avatarPanel); // Se removió el avatar a petición
         cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         cardPanel.add(lblTituloCard);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 30)));
@@ -354,12 +330,10 @@ public class clientes extends JFrame {
         return cardPanel;
     }
 
-    // Método para crear Cajas de Texto estilo línea inferior (Material Design)
     private JTextField crearTextFieldMaterial(String placeholderTexto) {
         JTextField txt = new JTextField();
         txt.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         txt.setForeground(new Color(15, 23, 42));
-        // Borde inferior únicamente
         txt.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(203, 213, 225)),
                 new EmptyBorder(5, 5, 5, 5)
@@ -372,7 +346,6 @@ public class clientes extends JFrame {
         return txt;
     }
 
-    // Método para botones unificados
     private JButton crearBoton(String texto, Color colorFondo) {
         JButton btn = new JButton(texto);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -415,11 +388,6 @@ public class clientes extends JFrame {
         });
     }
 
-
-
-    // ==========================================================
-    // CLASE INTERNA PARA EL PLACEHOLDER (Texto fantasma)
-    // ==========================================================
     class TextPrompt extends JLabel implements java.awt.event.FocusListener, javax.swing.event.DocumentListener {
         private JTextField component;
         public TextPrompt(String text, JTextField component) {

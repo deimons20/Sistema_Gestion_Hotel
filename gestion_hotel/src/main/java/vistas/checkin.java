@@ -125,7 +125,6 @@ public class checkin extends JFrame {
         searchPanel.add(txtBuscador, BorderLayout.CENTER);
         searchPanel.add(btnBuscar, BorderLayout.EAST);
 
-        // Lógica del botón buscar
         btnBuscar.addActionListener(e -> {
             String input = txtBuscador.getText().trim();
             if (input.isEmpty()) {
@@ -138,7 +137,6 @@ public class checkin extends JFrame {
             ClienteArchivo ca = new ClienteArchivo();
 
             if (reserva != null) {
-                // Es una reserva
                 Cliente c = ca.buscar(String.valueOf(reserva.getIdCliente()));
                 if (c != null) {
                     txtCliente.setText(c.getNombres() + " " + c.getApellidos());
@@ -149,7 +147,6 @@ public class checkin extends JFrame {
                 txtHabitacion.setEditable(false);
                 actualizarPrecioBase(String.valueOf(reserva.getNumeroHabitacion()));
             } else {
-                // Intentar buscar como DNI de cliente directo
                 Cliente c = ca.buscar(input);
                 if (c != null) {
                     txtCliente.setText(c.getNombres() + " " + c.getApellidos());
@@ -191,7 +188,6 @@ public class checkin extends JFrame {
         lblTituloCard.setForeground(new Color(30, 41, 59));
         lblTituloCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Campos de lectura
         JPanel formPanel = new JPanel(new GridLayout(5, 1, 0, 15));
         formPanel.setOpaque(false);
         
@@ -211,7 +207,6 @@ public class checkin extends JFrame {
         
         txtFechaLlegada = crearTextFieldMaterial("Fecha y Hora de Ingreso actual");
         txtFechaLlegada.setEditable(false);
-        // Automáticamente pone la fecha y hora actual del sistema
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy - hh:mm a");
         txtFechaLlegada.setText(java.time.LocalDateTime.now().format(dtf)); 
         
@@ -235,7 +230,6 @@ public class checkin extends JFrame {
         
         if (numHabInicial != null && !numHabInicial.isEmpty()) {
             actualizarPrecioBase(numHabInicial);
-            // Autocompletar datos si hay reserva
             ReservaArchivo ra = new ReservaArchivo();
             for (Reserva r : ra.listar()) {
                 if (String.valueOf(r.getNumeroHabitacion()).equals(numHabInicial)) {
@@ -246,16 +240,16 @@ public class checkin extends JFrame {
                     } else {
                         txtCliente.setText("Cliente ID: " + r.getIdCliente());
                     }
-                    txtBuscador.setText(r.getCodigoReserva()); // Setear el buscador para que se use al guardar
+                    txtBuscador.setText(r.getCodigoReserva());
                     
                     try {
                         String fOut = r.getFechaSalida();
                         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                        java.time.LocalDate dIn = java.time.LocalDate.now(); // Usar el dia actual en lugar del fIn de la reserva
+                        java.time.LocalDate dIn = java.time.LocalDate.now();
                         java.time.LocalDate dOut = java.time.LocalDate.parse(fOut, formatter);
                         long days = java.time.temporal.ChronoUnit.DAYS.between(dIn, dOut);
                         if (days >= 0 && days <= 7) {
-                            cbDuracion.setSelectedIndex(days == 0 ? 1 : (int)days + 1); // Si es el mismo dia, cobra medio dia, si no, los dias enteros
+                            cbDuracion.setSelectedIndex(days == 0 ? 1 : (int)days + 1);
                         } else if (days > 7) {
                             cbDuracion.setSelectedIndex(8);
                         }
@@ -271,7 +265,7 @@ public class checkin extends JFrame {
         btnConfirmarCheckIn = new JButton("Confirmar Ingreso (Ocupar Habitación)");
         btnConfirmarCheckIn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btnConfirmarCheckIn.setForeground(Color.WHITE);
-        btnConfirmarCheckIn.setBackground(new Color(16, 185, 129)); // Verde éxito
+        btnConfirmarCheckIn.setBackground(new Color(16, 185, 129));
         btnConfirmarCheckIn.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         btnConfirmarCheckIn.setOpaque(true);
         btnConfirmarCheckIn.setBorderPainted(false);
@@ -298,12 +292,9 @@ public class checkin extends JFrame {
                         return;
                     }
                     
-                    // Actualizar habitación a Ocupada
                     h.setEstado("OCUPADA");
                     ha.actualizar(h);
 
-                    // Si no tiene código de reserva, le creamos uno ficticio o manejamos la estancia actual.
-                    // Para simplificar, asumiremos que si vino directo, se puede registrar una reserva express
                     String busqueda = txtBuscador.getText().trim();
                     ReservaArchivo ra = new ReservaArchivo();
                     Reserva r = ra.buscar(busqueda);
@@ -321,7 +312,6 @@ public class checkin extends JFrame {
                     }
                     
                     if (r == null) {
-                        // Fue un check-in directo (DNI)
                         r = new Reserva();
                         r.setCodigoReserva("RES-" + System.currentTimeMillis());
                         r.setIdCliente(Integer.parseInt(busqueda)); 

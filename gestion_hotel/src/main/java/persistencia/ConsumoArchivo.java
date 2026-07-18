@@ -50,7 +50,6 @@ public class ConsumoArchivo implements CRUD<Consumo> {
     @Override
     public boolean registrar(Consumo objeto) {
         ArrayList<Consumo> lista = listar();
-        // Auto-incrementar ID si es necesario o asumir que ya viene
         lista.add(objeto);
         return sobrescribirArchivo(lista);
     }
@@ -81,7 +80,6 @@ public class ConsumoArchivo implements CRUD<Consumo> {
         return listar().stream().filter(c -> c.getIdConsumo() == idBusqueda).findFirst().orElse(null);
     }
     
-    // Método para obtener consumos de una habitación específica
     public ArrayList<Consumo> listarPorHabitacion(int numeroHabitacion) {
         ArrayList<Consumo> filtrado = new ArrayList<>();
         for (Consumo c : listar()) {

@@ -36,7 +36,6 @@ public class Snack extends JFrame {
         
         mainPanel.add(crearCabecera(), BorderLayout.NORTH);
         
-        // Contenedor dividido en 2 columnas
         JPanel contentPanel = new JPanel(new GridLayout(1, 2, 25, 0));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(25, 30, 30, 30));
@@ -47,12 +46,9 @@ public class Snack extends JFrame {
         mainPanel.add(contentPanel, BorderLayout.CENTER);
         add(mainPanel);
         
-        // Datos del menú se cargarán de la base de datos
     }
 
-    // ==========================================================
-    // 1. CABECERA
-    // ==========================================================
+    // 1. Header
     private JPanel crearCabecera() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(30, 41, 59)); 
@@ -95,9 +91,6 @@ public class Snack extends JFrame {
         return header;
     }
 
-    // ==========================================================
-    // 2. PANEL IZQUIERDO (MENÚ DE PRODUCTOS)
-    // ==========================================================
     private JPanel crearPanelMenu() {
         JPanel cardPanel = crearTarjetaBase();
         
@@ -105,7 +98,6 @@ public class Snack extends JFrame {
         lblTituloCard.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTituloCard.setForeground(new Color(30, 41, 59));
 
-        // Tabla del Menú
         String[] columnas = {"Cod.", "Producto", "Stock", "Precio (S/)"};
         modeloMenu = new DefaultTableModel(columnas, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -115,9 +107,9 @@ public class Snack extends JFrame {
         scrollMenu.getViewport().setBackground(Color.WHITE);
         scrollMenu.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        cargarDatosMenu(); // Llenar la tabla
+        cargarDatosMenu();
 
-        btnAgregar = crearBoton("Agregar al Carrito", new Color(59, 130, 246)); // Azul
+        btnAgregar = crearBoton("Agregar al Carrito", new Color(59, 130, 246));
         btnAgregar.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         btnAgregar.addActionListener(e -> {
@@ -161,7 +153,6 @@ public class Snack extends JFrame {
             }
         });
 
-        // --- Botones de Administración ---
         JPanel panelAdmin = new JPanel(new GridLayout(1, 3, 10, 0));
         panelAdmin.setOpaque(false);
         
@@ -201,7 +192,6 @@ public class Snack extends JFrame {
                     SnackArchivo sa = new SnackArchivo();
                     sa.eliminar(cod);
                     
-                    // Re-indexar los codigos restantes para que mantengan el orden S01, S02...
                     ArrayList<modelo.Snack> listaRestante = sa.listar();
                     try (java.io.BufferedWriter bw = new java.io.BufferedWriter(new java.io.FileWriter("archivos/snacks.txt"))) {
                         for (int i = 0; i < listaRestante.size(); i++) {
@@ -286,18 +276,13 @@ public class Snack extends JFrame {
         }
     }
 
-    // ==========================================================
-    // 3. PANEL DERECHO (CARRITO Y CUENTA)
-    // ==========================================================
     private JPanel crearPanelCarrito() {
         JPanel cardPanel = crearTarjetaBase();
         
-        // --- Selector de Habitación ---
         JPanel panelDestino = new JPanel(new GridLayout(2, 1, 0, 10));
         panelDestino.setOpaque(false);
         panelDestino.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
         
-        // En tu lógica real, este combo box solo mostrará habitaciones Ocupadas
         cmbHabitaciones = new JComboBox<>();
         cmbHabitaciones.addItem("Seleccione Habitación...");
         
@@ -325,7 +310,6 @@ public class Snack extends JFrame {
                 String habSeleccionada = cmbHabitaciones.getSelectedItem().toString();
                 String numStr = habSeleccionada.replace("Habitación ", "").trim();
                 
-                // Buscar cliente en reservas
                 ReservaArchivo ra = new ReservaArchivo();
                 ClienteArchivo ca = new ClienteArchivo();
                 boolean found = false;
@@ -349,7 +333,6 @@ public class Snack extends JFrame {
         panelDestino.add(cmbHabitaciones);
         panelDestino.add(txtClienteAsignado);
 
-        // --- Tabla del Carrito ---
         String[] colCarrito = {"Cod.", "Producto", "Cant.", "Subtotal"};
         modeloCarrito = new DefaultTableModel(colCarrito, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -359,7 +342,7 @@ public class Snack extends JFrame {
         scrollCarrito.getViewport().setBackground(Color.WHITE);
         scrollCarrito.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
         
-        btnQuitar = crearBoton("Quitar Producto", new Color(239, 68, 68)); // Rojo
+        btnQuitar = crearBoton("Quitar Producto", new Color(239, 68, 68));
         btnQuitar.addActionListener(e -> {
             int fila = tablaCarrito.getSelectedRow();
             if (fila >= 0) {
@@ -368,7 +351,6 @@ public class Snack extends JFrame {
             }
         });
 
-        // --- Panel Inferior (Totales y Botón Guardar) ---
         JPanel panelTotal = new JPanel(new BorderLayout());
         panelTotal.setOpaque(false);
         
@@ -376,7 +358,7 @@ public class Snack extends JFrame {
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblTotal.setForeground(new Color(15, 23, 42));
         
-        btnRegistrar = crearBoton("Cargar a la Cuenta", new Color(249, 115, 22)); // Naranja Snack
+        btnRegistrar = crearBoton("Cargar a la Cuenta", new Color(249, 115, 22));
         
         btnRegistrar.addActionListener(e -> {
             if (cmbHabitaciones.getSelectedIndex() == 0) {
@@ -395,7 +377,7 @@ public class Snack extends JFrame {
             SnackArchivo snackArch = new SnackArchivo();
             for (int i = 0; i < modeloCarrito.getRowCount(); i++) {
                 Consumo c = new Consumo();
-                c.setIdConsumo((int)(System.currentTimeMillis() % Integer.MAX_VALUE) + i); // ID Aleatorio simple
+                c.setIdConsumo((int)(System.currentTimeMillis() % Integer.MAX_VALUE) + i);
                 c.setNumeroHabitacion(numHabitacion);
                 String codSnack = modeloCarrito.getValueAt(i, 0).toString().replace(",", ".");
                 int cantidad = Integer.parseInt(modeloCarrito.getValueAt(i, 2).toString());
@@ -405,7 +387,6 @@ public class Snack extends JFrame {
                 c.setSubtotal(Double.parseDouble(modeloCarrito.getValueAt(i, 3).toString().replace(",", ".")));
                 ca.registrar(c);
                 
-                // Restar stock
                 modelo.Snack s = snackArch.buscar(codSnack);
                 if (s != null) {
                     s.setStock(Math.max(0, s.getStock() - cantidad));
@@ -428,7 +409,6 @@ public class Snack extends JFrame {
         panelTotal.add(lblTotal, BorderLayout.WEST);
         panelTotal.add(panelBotonesDerecha, BorderLayout.EAST);
 
-        // Ensamblar Tarjeta Derecha
         cardPanel.add(panelDestino);
         cardPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         cardPanel.add(scrollCarrito);
@@ -438,9 +418,6 @@ public class Snack extends JFrame {
         return cardPanel;
     }
 
-    // ==========================================================
-    // MÉTODOS AUXILIARES
-    // ==========================================================
     private JPanel crearTarjetaBase() {
         JPanel panel = new JPanel() {
             @Override
@@ -493,7 +470,6 @@ public class Snack extends JFrame {
         return btn;
     }
 
-    // Calcula el total del carrito dinámicamente
     private void calcularTotal() {
         double total = 0.0;
         for (int i = 0; i < modeloCarrito.getRowCount(); i++) {

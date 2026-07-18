@@ -18,7 +18,6 @@ public class Reserva {
         this.fechaSalida = fechaSalida;
     }
 
-    // Getters y Setters
     public String getCodigoReserva() { return codigoReserva; }
     public void setCodigoReserva(String codigoReserva) { this.codigoReserva = codigoReserva; }
 
