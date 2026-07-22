@@ -136,7 +136,7 @@ public class checkout extends JFrame {
         txtFechaIngreso = crearTextFieldMaterial("Fecha de Ingreso");
         txtFechaIngreso.setEditable(false);
         
-        txtFechaSalida = crearTextFieldMaterial("Fecha de Salida (Hoy)");
+        txtFechaSalida = crearTextFieldMaterial("Fecha de Salida");
         txtFechaSalida.setEditable(false);
         
         formPanel.add(txtCliente);
@@ -178,11 +178,15 @@ public class checkout extends JFrame {
                         txtCliente.setText("Cliente ID: " + reserva.getIdCliente());
                     }
                     txtFechaIngreso.setText(reserva.getFechaIngreso());
-                    txtFechaSalida.setText("Hoy (Check-Out)");
+                    
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy - hh:mm a");
+                    txtFechaSalida.setText(java.time.LocalDateTime.now().format(dtf));
                 } else {
                     txtCliente.setText("Huésped Directo");
                     txtFechaIngreso.setText("Desconocida");
-                    txtFechaSalida.setText("Hoy (Check-Out)");
+                    
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy - hh:mm a");
+                    txtFechaSalida.setText(java.time.LocalDateTime.now().format(dtf));
                 }
                 
                 modeloCuenta.setRowCount(0);

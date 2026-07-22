@@ -128,7 +128,7 @@ public class menu extends JFrame {
         String fechaActual = LocalDateTime.now().format(formatter);
         fechaActual = fechaActual.substring(0, 1).toUpperCase() + fechaActual.substring(1);
         
-        JLabel lblFecha = new JLabel("📅 " + fechaActual);
+        JLabel lblFecha = new JLabel(fechaActual);
         lblFecha.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblFecha.setForeground(new Color(100, 116, 139));
 
